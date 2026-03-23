@@ -1,14 +1,87 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>process-scheduling-solver</title>
-    <link rel="stylesheet" href="./src/index.css">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="cpuflow is an interactive CPU scheduling simulator for FCFS, SJF, Round Robin, Priority, and Multi-level Queue algorithms with real-time Gantt charts." />
+		<meta name="keywords" content="process scheduling, CPU scheduling, FCFS, SJF, Round Robin, priority scheduling, Gantt chart, operating system, algorithm simulator" />
+		<meta name="author" content="cpuflow" />
+		<meta name="theme-color" content="#ffffff" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://cpuflow.vercel.app/" />
+		<meta property="og:title" content="cpuflow - CPU Scheduling Simulator" />
+		<meta property="og:description" content="Interactive simulator for CPU scheduling algorithms. Visualize FCFS, SJF, Round Robin, Priority Scheduling, and Multi-level Queue with real-time Gantt charts." />
+		<meta property="og:image" content="https://cpuflow.vercel.app/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:site_name" content="cpuflow" />
+		<meta property="og:locale" content="en_US" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content="https://cpuflow.vercel.app/" />
+		<meta property="twitter:title" content="cpuflow - CPU Scheduling Simulator" />
+		<meta property="twitter:description" content="Interactive simulator for CPU scheduling algorithms. Visualize FCFS, SJF, Round Robin, Priority Scheduling & Multi-level Queue." />
+		<meta property="twitter:image" content="https://cpuflow.vercel.app/og-image.png" />
+		
+		<!-- Schema.org Structured Data -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "cpuflow",
+			"description": "Interactive CPU scheduling algorithm simulator with Gantt chart visualization",
+			"url": "https://cpuflow.vercel.app/",
+			"applicationCategory": "EducationalApplication",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			},
+			"author": {
+				"@type": "Organization",
+				"name": "cpuflow"
+			},
+			"featureList": [
+				"FCFS Scheduling",
+				"SJF Scheduling (Preemptive & Non-preemptive)",
+				"Round Robin Scheduling",
+				"Priority Scheduling (Preemptive & Non-preemptive)",
+				"Gantt Chart Visualization",
+				"Real-time Metrics",
+				"Export Charts"
+			]
+		}
+		</script>
+		
+		<!-- Favicon -->
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" href="/favicon.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		
+		<!-- Preconnect to optimize font loading -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		
+		<!-- Canonical URL -->
+		<link rel="canonical" href="https://cpuflow.vercel.app/" />
+		<link rel="alternate" type="application/rss+xml" href="/feed.xml" />
+		
+		<!-- Stylesheet -->
+		<link rel="stylesheet" href="/src/index.css" />
+		
+		<title>cpuflow - Interactive CPU Scheduling Simulator</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<noscript>
+			<p style="text-align: center; padding: 20px; font-family: system-ui, -apple-system, sans-serif;">
+				This application requires JavaScript to run. Please enable JavaScript in your browser settings.
+			</p>
+		</noscript>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>

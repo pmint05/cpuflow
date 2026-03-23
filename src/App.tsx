@@ -1,16 +1,7 @@
-import { useState } from "react";
-import { Button } from "./components/ui/button";
+import { SchedulerLayout } from "@/components/scheduler/SchedulerLayout";
 
 function App() {
-	const [count, setCount] = useState(0);
-
-	return (
-		<>
-			<Button variant="outline" size="lg">
-				Hello World
-			</Button>
-		</>
-	);
+	return <SchedulerLayout />;
 }
 
 export default App;

@@ -1,0 +1,19 @@
+# Robots.txt for cpuflow
+# Allow all search engines to crawl and index
+
+User-agent: *
+Allow: /
+Disallow: /node_modules/
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Sitemaps
+Sitemap: https://cpuflow.vercel.app/sitemap.xml
+
+# Crawl delay (request per second)
+Crawl-delay: 1
