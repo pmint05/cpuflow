@@ -3,37 +3,37 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="description" content="cpuflow is an interactive CPU scheduling simulator for FCFS, SJF, Round Robin, Priority, and Multi-level Queue algorithms with real-time Gantt charts." />
-		<meta name="keywords" content="process scheduling, CPU scheduling, FCFS, SJF, Round Robin, priority scheduling, Gantt chart, operating system, algorithm simulator" />
+		<meta name="description" content="cpuflow — interactive OS resource allocation simulators. Visualize CPU scheduling algorithms, Banker's Algorithm for deadlock avoidance, and deadlock detection with step-by-step traces." />
+		<meta name="keywords" content="CPU scheduling, FCFS, SJF, Round Robin, priority scheduling, Gantt chart, Banker's algorithm, deadlock detection, operating system, algorithm simulator, resource allocation" />
 		<meta name="author" content="cpuflow" />
-		<meta name="theme-color" content="#ffffff" />
-		
+		<meta name="theme-color" content="#09090b" />
+
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://cpuflow.vercel.app/" />
-		<meta property="og:title" content="cpuflow - CPU Scheduling Simulator" />
-		<meta property="og:description" content="Interactive simulator for CPU scheduling algorithms. Visualize FCFS, SJF, Round Robin, Priority Scheduling, and Multi-level Queue with real-time Gantt charts." />
+		<meta property="og:title" content="cpuflow — OS Resource Allocation Simulators" />
+		<meta property="og:description" content="Interactive simulators for CPU scheduling, Banker's Algorithm (deadlock avoidance), and deadlock detection — with Gantt charts and step-by-step traces." />
 		<meta property="og:image" content="https://cpuflow.vercel.app/og-image.png" />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
 		<meta property="og:image:type" content="image/png" />
 		<meta property="og:site_name" content="cpuflow" />
 		<meta property="og:locale" content="en_US" />
-		
+
 		<!-- Twitter -->
 		<meta property="twitter:card" content="summary_large_image" />
 		<meta property="twitter:url" content="https://cpuflow.vercel.app/" />
-		<meta property="twitter:title" content="cpuflow - CPU Scheduling Simulator" />
-		<meta property="twitter:description" content="Interactive simulator for CPU scheduling algorithms. Visualize FCFS, SJF, Round Robin, Priority Scheduling & Multi-level Queue." />
+		<meta property="twitter:title" content="cpuflow — OS Resource Allocation Simulators" />
+		<meta property="twitter:description" content="Interactive simulators for CPU scheduling, Banker's Algorithm, and deadlock detection — with animated step-by-step traces." />
 		<meta property="twitter:image" content="https://cpuflow.vercel.app/og-image.png" />
-		
+
 		<!-- Schema.org Structured Data -->
 		<script type="application/ld+json">
 		{
 			"@context": "https://schema.org",
 			"@type": "WebApplication",
 			"name": "cpuflow",
-			"description": "Interactive CPU scheduling algorithm simulator with Gantt chart visualization",
+			"description": "Interactive OS resource allocation simulators for CPU scheduling, Banker's Algorithm, and deadlock detection",
 			"url": "https://cpuflow.vercel.app/",
 			"applicationCategory": "EducationalApplication",
 			"offers": {
@@ -46,34 +46,31 @@
 				"name": "cpuflow"
 			},
 			"featureList": [
-				"FCFS Scheduling",
-				"SJF Scheduling (Preemptive & Non-preemptive)",
-				"Round Robin Scheduling",
-				"Priority Scheduling (Preemptive & Non-preemptive)",
-				"Gantt Chart Visualization",
-				"Real-time Metrics",
-				"Export Charts"
+				"CPU Scheduling: FCFS, SJF, Round Robin, Priority, Multi-Level Queue",
+				"Interactive Gantt Chart Visualization",
+				"Banker's Algorithm — Safe Sequence Detection",
+				"Banker's Algorithm — Resource Request Testing",
+				"Deadlock Detection — Resource Allocation Graph Reduction",
+				"Step-by-step animated traces",
+				"Shareable URLs with config persistence",
+				"Export Gantt charts to PNG"
 			]
 		}
 		</script>
-		
+
 		<!-- Favicon -->
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" type="image/png" href="/favicon.png" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		
+
 		<!-- Preconnect to optimize font loading -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		
+
 		<!-- Canonical URL -->
 		<link rel="canonical" href="https://cpuflow.vercel.app/" />
-		<link rel="alternate" type="application/rss+xml" href="/feed.xml" />
-		
-		<!-- Stylesheet -->
-		<link rel="stylesheet" href="/src/index.css" />
-		
-		<title>cpuflow - Interactive CPU Scheduling Simulator</title>
+
+		<title>cpuflow — OS Resource Allocation Simulators</title>
 	</head>
 	<body>
 		<div id="root"></div>
