@@ -31,11 +31,10 @@
     }
   ],
 
-  "redirects": [
+  "rewrites": [
     {
-      "source": "/old-url",
-      "destination": "/",
-      "permanent": false
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -1,7 +1,8 @@
-import { SchedulerLayout } from "@/components/scheduler/SchedulerLayout";
+import { RouterProvider } from 'react-router-dom';
+import { router } from '@presentation/routing/router';
 
 function App() {
-	return <SchedulerLayout />;
+	return <RouterProvider router={router} />;
 }
 
 export default App;
