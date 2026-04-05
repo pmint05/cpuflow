@@ -1,3 +1,11 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@components/ui/table';
 import { cn } from '@/lib/utils';
 
 interface MatrixDisplayProps {
@@ -25,78 +33,85 @@ export function MatrixDisplay({
 }: MatrixDisplayProps) {
   if (!matrix || matrix.length === 0) return null;
 
+  const visibleColumnCount =
+    colLabels?.length ?? matrix.reduce((max, row) => Math.max(max, row.length), 0);
+
   const cellPad = compact ? 'px-2 py-1' : 'px-3 py-1.5';
   const headerPad = compact ? 'px-2 py-1' : 'px-3 py-1.5';
   const textSize = compact ? 'text-xs' : 'text-sm';
 
   return (
-    <div className={cn('overflow-x-auto', className)}>
+    <div className={cn('overflow-auto rounded-lg border', className)}>
       {title && (
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {title}
         </p>
       )}
-      <table className={cn('border-collapse', textSize)}>
-        {colLabels && (
-          <thead>
-            <tr>
-              {/* corner empty cell */}
-              {rowLabels && <th className={cn(headerPad, 'text-muted-foreground font-mono')} />}
-              {colLabels.map((col) => (
-                <th
-                  key={col}
-                  className={cn(
-                    headerPad,
-                    'font-mono font-semibold text-muted-foreground text-center'
-                  )}
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-        )}
-        <tbody>
+      <Table className={cn('min-w-max border-separate border-spacing-0', textSize)}>
+        <TableHeader>
+          <TableRow>
+            {rowLabels && (
+              <TableHead
+                className={cn(
+                  headerPad,
+                  'sticky left-0 top-0 z-30 bg-background font-mono text-muted-foreground',
+                )}
+              />
+            )}
+            {colLabels?.map((col) => (
+              <TableHead
+                key={col}
+                className={cn(
+                  headerPad,
+                  'sticky top-0 z-20 bg-background font-mono font-semibold text-muted-foreground text-center',
+                )}
+              >
+                {col}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {matrix.map((row, i) => (
-            <tr
+            <TableRow
               key={i}
               className={cn(
                 'transition-colors',
                 i === activeRow
-                  ? 'bg-primary/10 rounded'
+                  ? 'bg-primary/10'
                   : i % 2 === 0
                   ? 'bg-muted/20'
-                  : ''
+                  : '',
               )}
             >
               {rowLabels && (
-                <th
+                <TableHead
+                  scope="row"
                   className={cn(
                     headerPad,
-                    'font-mono font-semibold text-left',
-                    i === activeRow ? 'text-primary' : 'text-muted-foreground'
+                    'sticky left-0 z-10 bg-inherit font-mono font-semibold text-left',
+                    i === activeRow ? 'text-primary' : 'text-muted-foreground',
                   )}
                 >
                   {rowLabels[i] ?? `P${i}`}
-                </th>
+                </TableHead>
               )}
-              {row.map((val, j) => (
-                <td
+              {Array.from({ length: visibleColumnCount }, (_, j) => row[j] ?? 0).map((val, j) => (
+                <TableCell
                   key={j}
                   className={cn(
                     cellPad,
-                    'font-mono text-center tabular-nums',
-                    'border border-border/30 rounded',
-                    cellClassName?.(i, j, val)
+                    'bg-inherit font-mono text-center tabular-nums border border-border/30',
+                    cellClassName?.(i, j, val),
                   )}
                 >
                   {val}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

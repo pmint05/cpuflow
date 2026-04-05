@@ -19,7 +19,6 @@ export function TopNav() {
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-14 px-4 lg:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity">
-          <CpuIcon className="size-5" />
           <span>cpuflow</span>
         </Link>
 

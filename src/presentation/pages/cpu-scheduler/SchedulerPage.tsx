@@ -3,6 +3,7 @@ import { useScheduler } from '@app/cpu-scheduler/useScheduler';
 import { useProcessInput } from '@presentation/hooks/useProcessInput';
 import { ConfigSection } from './ConfigSection';
 import { ResultsSection } from './ResultsSection';
+import { PageBreadcrumb } from '@presentation/components/shared/PageBreadcrumb';
 import { requiresPriority } from '@domain/algorithms/cpu-scheduling';
 import { toast } from 'sonner';
 import type {
@@ -677,6 +678,19 @@ export function SchedulerPage() {
   return (
     <div className="p-4 lg:p-8 bg-background">
       <div className="container mx-auto max-w-7xl">
+        <div className="mb-6 space-y-3">
+          <PageBreadcrumb
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'CPU Scheduler' },
+            ]}
+          />
+          <div>
+            <h1 className="text-2xl font-bold">CPU Scheduler</h1>
+            <p className="text-sm text-muted-foreground">Interactive scheduling simulator</p>
+          </div>
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left/Top: Configuration */}

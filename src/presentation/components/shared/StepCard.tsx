@@ -74,6 +74,32 @@ export function StepCard({ step, processCount, processLabels, resourceLabels, va
         <p className="text-sm leading-relaxed">{step.action}</p>
       </div>
 
+      {/* Finish flags */}
+      {step.finishFlags.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Process Status</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: processCount }, (_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-mono font-semibold',
+                  !isSummary && step.processId === i
+                    ? 'ring-2 ring-offset-1 ring-primary'
+                    : '',
+                  step.finishFlags[i]
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {processLabels[i] ?? `P${i}`}
+                {step.finishFlags[i] ? ' ✓' : ''}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Work vector */}
       {step.work.length > 0 && (
         <div className="space-y-1.5">
@@ -120,31 +146,7 @@ export function StepCard({ step, processCount, processLabels, resourceLabels, va
         </div>
       )}
 
-      {/* Finish flags */}
-      {step.finishFlags.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Process Status</p>
-          <div className="flex flex-wrap gap-1.5">
-            {Array.from({ length: processCount }, (_, i) => (
-              <span
-                key={i}
-                className={cn(
-                  'px-2 py-0.5 rounded-full text-xs font-mono font-semibold',
-                  !isSummary && step.processId === i
-                    ? 'ring-2 ring-offset-1 ring-primary'
-                    : '',
-                  step.finishFlags[i]
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {processLabels[i] ?? `P${i}`}
-                {step.finishFlags[i] ? ' ✓' : ''}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }
