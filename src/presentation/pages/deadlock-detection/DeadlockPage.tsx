@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
@@ -145,11 +144,11 @@ export function DeadlockPage() {
 		toast.info("Reset to defaults");
 	}, [reset]);
 
-	const handleCopyUrl = useCallback(() => {
-		navigator.clipboard
-			.writeText(window.location.href)
-			.then(() => toast.success("URL copied!"));
-	}, []);
+	// const handleCopyUrl = useCallback(() => {
+	// 	navigator.clipboard
+	// 		.writeText(window.location.href)
+	// 		.then(() => toast.success("URL copied!"));
+	// }, []);
 
 	return (
 		<div className="p-4 lg:p-8">

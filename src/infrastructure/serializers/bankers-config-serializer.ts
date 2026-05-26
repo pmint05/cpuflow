@@ -74,7 +74,7 @@ export function decodeBankersConfig(encoded: string): BankersConfig {
   const parsed = decodeBase64URL<BankersConfig>(encoded);
   if (!parsed || typeof parsed !== 'object') return BANKERS_DEFAULTS;
 
-  const record = parsed as Record<string, unknown>;
+  const record = parsed as unknown as Record<string, unknown>;
 
   if (isMatrix(record.allocation) && isMatrix(record.max) && isVector(record.available)) {
     return {
