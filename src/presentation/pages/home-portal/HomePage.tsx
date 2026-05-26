@@ -3,6 +3,7 @@ import {
 	CpuIcon,
 	ShieldCheckIcon,
 	AlertTriangleIcon,
+	HardDriveIcon,
 	ArrowRightIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
@@ -25,6 +26,22 @@ const SIMULATORS = [
 		color: "from-blue-500/10 to-cyan-500/10",
 		iconColor: "text-blue-500",
 		onHover: "hover:ring-blue-200 dark:hover:ring-blue-800",
+	},
+	{
+		title: "Disk Scheduler",
+		description:
+			"Visualize disk head movement and compare FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK with deterministic step playback.",
+		icon: HardDriveIcon,
+		path: "/disk-scheduler",
+		features: [
+			"6 disk scheduling algorithms",
+			"Step-by-step playback",
+			"Comparison metrics",
+			"Shareable URL state",
+		],
+		color: "from-sky-500/10 to-indigo-500/10",
+		iconColor: "text-sky-500",
+		onHover: "hover:ring-sky-200 dark:hover:ring-sky-800",
 	},
 	{
 		title: "Banker's Algorithm",

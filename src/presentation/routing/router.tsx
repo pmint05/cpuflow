@@ -4,6 +4,7 @@ import { SchedulerPage } from '@presentation/pages/cpu-scheduler/SchedulerPage';
 import { HomePage } from '@presentation/pages/home-portal/HomePage';
 import { BankersPage } from '@presentation/pages/bankers-algorithm/BankersPage';
 import { DeadlockPage } from '@presentation/pages/deadlock-detection/DeadlockPage';
+import { DiskSchedulerPage } from '@presentation/pages/disk-scheduler/DiskSchedulerPage';
 import { NotFoundPage } from '@presentation/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         path: '/algo/deadlock-detection',
         element: <DeadlockPage />,
+      },
+      {
+        path: '/disk-scheduler',
+        element: <DiskSchedulerPage />,
       },
       {
         path: '*',
