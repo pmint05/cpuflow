@@ -7,12 +7,12 @@ export const diskInputSchema = z
     algorithm: z.enum(ALGORITHMS),
     direction: z.enum(['LEFT', 'RIGHT']),
     maxCylinder: z.coerce
-      .number({ invalid_type_error: 'Max cylinder must be a number' })
+      .number({ error: 'Max cylinder must be a number' })
       .int()
       .min(1, 'Max cylinder must be at least 1')
       .max(50000, 'Value cannot exceed 50,000 for performance reasons'),
     initialHead: z.coerce
-      .number({ invalid_type_error: 'Initial head must be a number' })
+      .number({ error: 'Initial head must be a number' })
       .int()
       .min(0, 'Initial head must be non-negative'),
     queueInput: z.string().min(1, 'Queue cannot be empty'),
@@ -22,7 +22,7 @@ export const diskInputSchema = z
     // Cross-field validation 1: initialHead <= maxCylinder
     if (data.initialHead > data.maxCylinder) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ['initialHead'],
         message: 'Initial head cannot be greater than max cylinder',
       });
@@ -38,7 +38,7 @@ export const diskInputSchema = z
     
     if (firstInvalidValue !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ['queueInput'],
         message: `Request ${firstInvalidValue} exceeds max cylinder (${data.maxCylinder})`,
       });

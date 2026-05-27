@@ -10,9 +10,10 @@ import {
 export function calculateDiskCLOOK(
   initialHead: number,
   queue: number[],
-  direction: DiskDirection
+  direction: DiskDirection,
+  countJumps: boolean = false
 ): DiskSimulationResult {
-  const context = createContext('C_LOOK', initialHead, queue);
+  const context = createContext('C_LOOK', initialHead, queue, countJumps);
   let current = initialHead;
 
   const left = context.pending

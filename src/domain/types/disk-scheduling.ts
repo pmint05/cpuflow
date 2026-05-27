@@ -15,6 +15,7 @@ export interface DiskSchedulingInput {
   maxCylinder: number;
   direction: DiskDirection;
   includeEdges?: boolean;
+  countJumps?: boolean;
 }
 
 export type DiskStepCalculation = {
@@ -44,6 +45,7 @@ export type DiskSimulationResult = {
   totalDistance: number;
   steps: DiskSimulationStep[];
   seekSequence: number[];
+  countJumps: boolean;
 };
 
 export interface DiskComparisonMetrics {

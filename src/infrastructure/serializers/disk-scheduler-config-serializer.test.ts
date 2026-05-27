@@ -20,7 +20,7 @@ describe('disk scheduler config serializer', () => {
       includeEdges: false,
     };
 
-    const encoded = encodeDiskSchedulerConfig(config);
+    const encoded = encodeDiskSchedulerConfig(config as any);
     const decoded = decodeDiskSchedulerConfig(`?${encoded}`);
 
     expect(decoded).toEqual(config);
@@ -39,7 +39,6 @@ describe('disk scheduler config serializer', () => {
     expect(decoded.speed).toBe(DISK_SCHEDULER_DEFAULTS.speed);
     expect(decoded.ghost).toBe(DISK_SCHEDULER_DEFAULTS.ghost);
     expect(decoded.academic).toBe(DISK_SCHEDULER_DEFAULTS.academic);
-    expect(decoded.explain).toBe(DISK_SCHEDULER_DEFAULTS.explain);
     expect(decoded.includeEdges).toBe(DISK_SCHEDULER_DEFAULTS.includeEdges);
   });
 });

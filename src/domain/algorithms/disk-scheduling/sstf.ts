@@ -8,9 +8,10 @@ import {
 
 export function calculateDiskSSTF(
   initialHead: number,
-  queue: number[]
+  queue: number[],
+  countJumps: boolean = false
 ): DiskSimulationResult {
-  const context = createContext('SSTF', initialHead, queue);
+  const context = createContext('SSTF', initialHead, queue, countJumps);
   let current = initialHead;
 
   while (context.pending.length > 0) {

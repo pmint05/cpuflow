@@ -3,9 +3,10 @@ import { createContext, finalizeResult, moveHead } from './types';
 
 export function calculateDiskFCFS(
   initialHead: number,
-  queue: number[]
+  queue: number[],
+  countJumps: boolean = false
 ): DiskSimulationResult {
-  const context = createContext('FCFS', initialHead, queue);
+  const context = createContext('FCFS', initialHead, queue, countJumps);
   let current = initialHead;
 
   for (const request of [...context.pending]) {

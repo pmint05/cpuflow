@@ -31,6 +31,7 @@ export function DiskSchedulerPage() {
 		maxCylinder: urlConfig.max,
 		direction: urlConfig.direction,
 		includeEdges: urlConfig.includeEdges,
+		countJumps: urlConfig.countJumps,
 		scannerMode: urlConfig.scanner,
 	}));
 
@@ -57,9 +58,13 @@ export function DiskSchedulerPage() {
 		const nextConfig = { ...urlConfig, [key]: value };
 		setUrlConfig(nextConfig);
 
-		// If it's a visualization toggle (not algorithm input), update simulation reactively
+		// Visualization and logic-influencing toggles update simulation reactively
 		if (key === "scanner") {
 			setActiveSimulationInput(prev => ({ ...prev, scannerMode: value as boolean }));
+		} else if (key === "countJumps") {
+			setActiveSimulationInput(prev => ({ ...prev, countJumps: value as boolean }));
+		} else if (key === "includeEdges") {
+			setActiveSimulationInput(prev => ({ ...prev, includeEdges: value as boolean }));
 		}
 	};
 
@@ -85,6 +90,7 @@ export function DiskSchedulerPage() {
 			direction: formValues.direction,
 			includeEdges: formValues.includeEdges,
 			queue: parseQueue(formValues.queueInput, formValues.maxCylinder),
+			countJumps: urlConfig.countJumps,
 			scannerMode: urlConfig.scanner,
 		});
 	};
@@ -128,6 +134,7 @@ export function DiskSchedulerPage() {
 							academicEnabled={urlConfig.academic}
 							scannerEnabled={urlConfig.scanner}
 							includeEdges={urlConfig.includeEdges}
+							countJumps={urlConfig.countJumps}
 							showGrid={urlConfig.grid}
 							showHead={urlConfig.headLabel}
 							highlightCurrent={urlConfig.highlight}
@@ -142,9 +149,8 @@ export function DiskSchedulerPage() {
 								handleUrlConfigChange("academic", value)
 							}
 							onScannerChange={(value) => handleUrlConfigChange("scanner", value)}
-							onIncludeEdgesChange={(value) => {
-								handleUrlConfigChange("includeEdges", value);
-							}}
+							onIncludeEdgesChange={(value) => handleUrlConfigChange("includeEdges", value)}
+							onCountJumpsChange={(value) => handleUrlConfigChange("countJumps", value)}
 							onShowGridChange={(value) => handleUrlConfigChange("grid", value)}
 							onShowHeadChange={(value) =>
 								handleUrlConfigChange("headLabel", value)
@@ -280,6 +286,9 @@ export function DiskSchedulerPage() {
 								setActiveSimulationInput(prev => ({
 									...prev,
 									algorithm,
+									// Ensure current toggles are preserved
+									includeEdges: urlConfig.includeEdges,
+									countJumps: urlConfig.countJumps,
 								}));
 							}}
 						/>

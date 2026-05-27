@@ -16,19 +16,22 @@ export type DiskAlgorithmExecutor = (args: {
   direction: DiskDirection;
   maxCylinder: number;
   includeEdges?: boolean;
+  countJumps?: boolean;
 }) => DiskSimulationResult;
 
 const algorithms: Record<DiskSchedulingAlgorithm, DiskAlgorithmExecutor> = {
-  FCFS: ({ initialHead, queue }) => calculateDiskFCFS(initialHead, queue),
-  SSTF: ({ initialHead, queue }) => calculateDiskSSTF(initialHead, queue),
-  SCAN: ({ initialHead, queue, direction, maxCylinder, includeEdges }) =>
-    calculateDiskSCAN(initialHead, queue, direction, maxCylinder, includeEdges),
-  C_SCAN: ({ initialHead, queue, direction, maxCylinder, includeEdges }) =>
-    calculateDiskCSCAN(initialHead, queue, direction, maxCylinder, includeEdges),
-  LOOK: ({ initialHead, queue, direction }) =>
-    calculateDiskLOOK(initialHead, queue, direction),
-  C_LOOK: ({ initialHead, queue, direction }) =>
-    calculateDiskCLOOK(initialHead, queue, direction),
+  FCFS: ({ initialHead, queue, countJumps }) => 
+    calculateDiskFCFS(initialHead, queue, countJumps),
+  SSTF: ({ initialHead, queue, countJumps }) => 
+    calculateDiskSSTF(initialHead, queue, countJumps),
+  SCAN: ({ initialHead, queue, direction, maxCylinder, includeEdges, countJumps }) =>
+    calculateDiskSCAN(initialHead, queue, direction, maxCylinder, includeEdges, countJumps),
+  C_SCAN: ({ initialHead, queue, direction, maxCylinder, includeEdges, countJumps }) =>
+    calculateDiskCSCAN(initialHead, queue, direction, maxCylinder, includeEdges, countJumps),
+  LOOK: ({ initialHead, queue, direction, countJumps }) =>
+    calculateDiskLOOK(initialHead, queue, direction, countJumps),
+  C_LOOK: ({ initialHead, queue, direction, countJumps }) =>
+    calculateDiskCLOOK(initialHead, queue, direction, countJumps),
 };
 
 export function getDiskAlgorithm(

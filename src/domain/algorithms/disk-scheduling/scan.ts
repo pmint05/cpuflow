@@ -12,9 +12,10 @@ export function calculateDiskSCAN(
   queue: number[],
   direction: DiskDirection,
   maxCylinder: number,
-  includeEdges = true
+  includeEdges: boolean = true,
+  countJumps: boolean = false
 ): DiskSimulationResult {
-  const context = createContext('SCAN', initialHead, queue);
+  const context = createContext('SCAN', initialHead, queue, countJumps);
   let current = initialHead;
   let currentDirection = direction;
 

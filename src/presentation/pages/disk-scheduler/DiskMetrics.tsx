@@ -21,9 +21,13 @@ export function DiskMetrics({ result }: DiskMetricsProps) {
 		);
 	}
 
-	const movementCount = result.steps.length;
+	const meaningfulSteps = result.countJumps 
+		? result.steps 
+		: result.steps.filter(s => s.type !== 'JUMP');
+
+	const movementCount = meaningfulSteps.length;
 	const average = movementCount > 0 ? result.totalDistance / movementCount : 0;
-	const maxJumpStep = result.steps.reduce(
+	const maxJumpStep = meaningfulSteps.reduce(
 		(largest, step) =>
 			!largest || step.distance > largest.distance ? step : largest,
 		null as (typeof result.steps)[0] | null,
@@ -60,7 +64,7 @@ export function DiskMetrics({ result }: DiskMetricsProps) {
 						{average.toFixed(2)}
 					</p>
 					<p className="mt-1 text-[10px] text-muted-foreground">
-						{result.totalDistance} / {movementCount || 1} movements
+						{result.totalDistance} / {movementCount || 1} {result.countJumps ? 'movements & jumps' : 'movements'}
 					</p>
 				</div>
 

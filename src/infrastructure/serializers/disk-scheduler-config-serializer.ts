@@ -11,6 +11,7 @@ export interface DiskSchedulerConfig {
   max: number;
   queue: number[];
   includeEdges: boolean;
+  countJumps: boolean;
   // Playback
   speed: number;
   // Modes
@@ -38,6 +39,7 @@ export const DISK_SCHEDULER_DEFAULTS: DiskSchedulerConfig = {
   max: 4999,
   queue: [2069, 1212, 2296, 2800, 544, 1618, 356, 1523, 4965, 3681],
   includeEdges: true,
+  countJumps: false,
   // Playback
   speed: 1,
   // Modes
@@ -128,6 +130,7 @@ export function decodeDiskSchedulerConfig(search: string): DiskSchedulerConfig {
     max,
     queue: parseQueue(params.get('queue'), max),
     includeEdges: asBoolean(params.get('edges'), DISK_SCHEDULER_DEFAULTS.includeEdges),
+    countJumps: asBoolean(params.get('jumps'), DISK_SCHEDULER_DEFAULTS.countJumps),
     // Playback
     speed,
     // Modes
@@ -158,6 +161,7 @@ export function encodeDiskSchedulerConfig(config: DiskSchedulerConfig): string {
   params.set('max', String(config.max));
   params.set('queue', config.queue.join(','));
   params.set('edges', String(config.includeEdges));
+  params.set('jumps', String(config.countJumps));
   // Playback
   params.set('speed', String(config.speed));
   // Modes

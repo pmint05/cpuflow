@@ -19,12 +19,14 @@ export type BuildContext = {
   seekSequence: number[];
   steps: DiskSimulationStep[];
   totalDistance: number;
+  countJumps: boolean;
 };
 
 export function createContext(
   algorithm: DiskSchedulingAlgorithm,
   initialHead: number,
-  queue: number[]
+  queue: number[],
+  countJumps: boolean = false
 ): BuildContext {
   return {
     algorithm,
@@ -34,6 +36,7 @@ export function createContext(
     seekSequence: [initialHead],
     steps: [],
     totalDistance: 0,
+    countJumps,
   };
 }
 
@@ -77,11 +80,15 @@ export function moveHead(
   type?: DiskStepType
 ): number {
   const distance = absDistance(from, to);
-  context.totalDistance += distance;
-
+  
   const resolvedType: DiskStepType = type 
     ? type 
     : (typeof completeRequestId === 'number' ? 'SERVICE' : 'MOVE');
+
+  // Logic: only add distance if it's not a JUMP or if countJumps is enabled
+  if (resolvedType !== 'JUMP' || context.countJumps) {
+    context.totalDistance += distance;
+  }
 
   if (typeof completeRequestId === 'number') {
     const index = context.pending.findIndex((request) => request.id === completeRequestId);
@@ -119,5 +126,6 @@ export function finalizeResult(context: BuildContext): DiskSimulationResult {
     totalDistance: context.totalDistance,
     steps: context.steps,
     seekSequence: context.seekSequence,
+    countJumps: context.countJumps,
   };
 }

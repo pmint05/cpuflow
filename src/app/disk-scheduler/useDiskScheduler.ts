@@ -19,6 +19,7 @@ export interface DiskSchedulerInput {
   maxCylinder: number;
   direction: DiskDirection;
   includeEdges?: boolean;
+  countJumps?: boolean;
   scannerMode?: boolean;
 }
 
@@ -49,6 +50,7 @@ export const DISK_SCHEDULER_DEFAULT_INPUT: DiskSchedulerInput = {
   maxCylinder: 4999,
   direction: 'RIGHT',
   includeEdges: true,
+  countJumps: false,
   scannerMode: true,
 };
 
@@ -68,9 +70,13 @@ function clampStep(step: number, result: DiskSimulationResult | null): number {
 }
 
 function calculateComparisonMetrics(result: DiskSimulationResult): DiskComparisonMetrics {
-  const stepCount = result.steps.length;
+  const meaningfulSteps = result.countJumps 
+    ? result.steps 
+    : result.steps.filter(s => s.type !== 'JUMP');
+    
+  const stepCount = meaningfulSteps.length;
   const averageSeekDistance = stepCount > 0 ? result.totalDistance / stepCount : 0;
-  const maxJump = stepCount > 0 ? Math.max(...result.steps.map((step) => step.distance)) : 0;
+  const maxJump = stepCount > 0 ? Math.max(...meaningfulSteps.map((step) => step.distance)) : 0;
 
   let directionReversals = 0;
   let edgeTraversals = 0;
@@ -113,6 +119,7 @@ function executeAlgorithm(
     direction: input.direction,
     maxCylinder: input.maxCylinder,
     includeEdges: input.includeEdges,
+    countJumps: input.countJumps,
   });
 }
 
@@ -129,17 +136,17 @@ export function useDiskScheduler(
   const progressStartTimeRef = useRef<number | null>(null);
 
   // Destructure input for stable dependencies
-  const { algorithm, initialHead, queue, maxCylinder, direction, includeEdges, scannerMode } = input;
+  const { algorithm, initialHead, queue, maxCylinder, direction, includeEdges, countJumps, scannerMode } = input;
 
   const result = useMemo(() => {
-    return executeAlgorithm(algorithm, { algorithm, initialHead, queue, maxCylinder, direction, includeEdges });
-  }, [algorithm, initialHead, queue, maxCylinder, direction, includeEdges]);
+    return executeAlgorithm(algorithm, { algorithm, initialHead, queue, maxCylinder, direction, includeEdges, countJumps });
+  }, [algorithm, initialHead, queue, maxCylinder, direction, includeEdges, countJumps]);
 
   const comparisonResults = useMemo(() => {
     return ALL_DISK_ALGORITHMS.map((algo) =>
-      executeAlgorithm(algo, { algorithm: algo, initialHead, queue, maxCylinder, direction, includeEdges })
+      executeAlgorithm(algo, { algorithm: algo, initialHead, queue, maxCylinder, direction, includeEdges, countJumps })
     );
-  }, [initialHead, queue, maxCylinder, direction, includeEdges]);
+  }, [initialHead, queue, maxCylinder, direction, includeEdges, countJumps]);
 
   const comparisonMetrics = useMemo(
     () => comparisonResults.map(calculateComparisonMetrics),
