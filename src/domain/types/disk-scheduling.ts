@@ -22,6 +22,8 @@ export type DiskStepCalculation = {
   result: number;
 };
 
+export type DiskStepType = 'SERVICE' | 'MOVE' | 'JUMP';
+
 export type DiskSimulationStep = {
   step: number;
   from: number;
@@ -29,6 +31,7 @@ export type DiskSimulationStep = {
   distance: number;
   cumulativeDistance: number;
   direction: DiskDirection;
+  type: DiskStepType;
   pendingRequests: number[];
   completedRequests: number[];
   explanation?: string;

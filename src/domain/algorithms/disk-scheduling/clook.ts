@@ -41,7 +41,9 @@ export function calculateDiskCLOOK(
         current,
         jumpTarget.value,
         'LEFT',
-        `C-LOOK jumps to ${jumpTarget.value} (smallest pending request).`
+        `C-LOOK jumps to ${jumpTarget.value} (smallest pending request).`,
+        undefined,
+        'JUMP'
       );
 
       for (const request of remainingLeft) {
@@ -77,7 +79,9 @@ export function calculateDiskCLOOK(
         current,
         jumpTarget.value,
         'RIGHT',
-        `C-LOOK jumps to ${jumpTarget.value} (largest pending request).`
+        `C-LOOK jumps to ${jumpTarget.value} (largest pending request).`,
+        undefined,
+        'JUMP'
       );
 
       for (const request of remainingRight) {

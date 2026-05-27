@@ -53,7 +53,9 @@ export function calculateDiskCSCAN(
         current,
         jumpTarget,
         'LEFT',
-        `C-SCAN jumps to ${jumpTarget} and resumes from the smallest pending request.`
+        `C-SCAN jumps to ${jumpTarget} and resumes from the smallest pending request.`,
+        undefined,
+        'JUMP'
       );
 
       for (const request of left) {
@@ -99,7 +101,9 @@ export function calculateDiskCSCAN(
         current,
         jumpTarget,
         'RIGHT',
-        `C-SCAN jumps to ${jumpTarget} and resumes from the largest pending request.`
+        `C-SCAN jumps to ${jumpTarget} and resumes from the largest pending request.`,
+        undefined,
+        'JUMP'
       );
 
       for (const request of rightDescending) {

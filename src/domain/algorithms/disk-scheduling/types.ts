@@ -3,6 +3,7 @@ import type {
   DiskSchedulingAlgorithm,
   DiskSimulationResult,
   DiskSimulationStep,
+  DiskStepType,
 } from '@domain/types/disk-scheduling';
 
 export type DiskRequest = {
@@ -72,10 +73,15 @@ export function moveHead(
   to: number,
   direction: DiskDirection,
   explanation: string,
-  completeRequestId?: number
+  completeRequestId?: number,
+  type?: DiskStepType
 ): number {
   const distance = absDistance(from, to);
   context.totalDistance += distance;
+
+  const resolvedType: DiskStepType = type 
+    ? type 
+    : (typeof completeRequestId === 'number' ? 'SERVICE' : 'MOVE');
 
   if (typeof completeRequestId === 'number') {
     const index = context.pending.findIndex((request) => request.id === completeRequestId);
@@ -93,6 +99,7 @@ export function moveHead(
     distance,
     cumulativeDistance: context.totalDistance,
     direction,
+    type: resolvedType,
     pendingRequests: cloneValues(context.pending),
     completedRequests: cloneValues(context.completed),
     explanation,

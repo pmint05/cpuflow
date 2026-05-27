@@ -73,6 +73,7 @@ const MARKER_SPACING_Y = 86;
 const AXIS_PADDING_X = 56;
 const AXIS_PADDING_Y = 56;
 const BOTTOM_AXIS_HEIGHT = 48; // Space for labels at the bottom
+const JUMP_DASH = [10, 16, 2, 16];
 
 export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 	function DiskCanvas(
@@ -193,6 +194,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 
 			return result.seekSequence.slice(0, -1).map((from, index) => {
 				const to = result.seekSequence[index + 1];
+				const step = result.steps[index];
 				const fromX = cylinderToX({
 					cylinder: from,
 					maxCylinder,
@@ -231,6 +233,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					to,
 					points: [startX, startY, endX, endY],
 					index,
+					type: step.type,
 				};
 			});
 		}, [result, maxCylinder, stageWidth, markerRadius]);
@@ -394,28 +397,82 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 
 							{layers.includes("ghost-preview") && ghostEnabled && (
 								<Layer listening={false}>
-									{futureSegments.map((segment) => (
-										<Arrow
-											key={`ghost-${segment.index}`}
-											points={segment.points}
-											stroke={pathColor}
-											fill={pathColor}
-											opacity={0.15}
-											dash={[10, 10]}
-											strokeWidth={strokeWidth - 1}
-											pointerLength={8}
-											pointerWidth={8}
-										/>
-									))}
+									{futureSegments.map((segment) =>
+										segment.type === "JUMP" ? (
+											<Line
+												key={`ghost-jump-${segment.index}`}
+												points={segment.points}
+												stroke={pathColor}
+												strokeWidth={strokeWidth - 1}
+												lineCap="round"
+												lineJoin="round"
+												opacity={0.15}
+												dash={JUMP_DASH}
+											/>
+										) : (
+											<Arrow
+												key={`ghost-${segment.index}`}
+												points={segment.points}
+												stroke={pathColor}
+												fill={pathColor}
+												opacity={0.15}
+												dash={[10, 10]}
+												strokeWidth={strokeWidth - 1}
+												pointerLength={8}
+												pointerWidth={8}
+											/>
+										),
+									)}
 								</Layer>
 							)}
 
 							{layers.includes("completed-path") && (
 								<Layer listening={false}>
-									{completedSegments.map((segment) => (
+									{completedSegments.map((segment) =>
+										segment.type === "JUMP" ? (
+											<Line
+												key={`jump-${segment.index}`}
+												points={segment.points}
+												stroke={pathColor}
+												strokeWidth={strokeWidth}
+												lineCap="round"
+												lineJoin="round"
+												opacity={0.8}
+												dash={JUMP_DASH}
+											/>
+										) : (
+											<Arrow
+												key={`done-${segment.index}`}
+												points={segment.points}
+												stroke={pathColor}
+												fill={pathColor}
+												strokeWidth={strokeWidth}
+												lineCap="round"
+												lineJoin="round"
+												opacity={0.8}
+												pointerLength={10}
+												pointerWidth={10}
+											/>
+										),
+									)}
+								</Layer>
+							)}
+
+							{layers.includes("active-segment") && activeSegment && (
+								<Layer listening={false}>
+									{activeSegment.type === "JUMP" ? (
+										<Line
+											points={activeSegment.points}
+											stroke={pathColor}
+											strokeWidth={strokeWidth}
+											lineCap="round"
+											lineJoin="round"
+											opacity={0.8}
+											dash={JUMP_DASH}
+										/>
+									) : (
 										<Arrow
-											key={`done-${segment.index}`}
-											points={segment.points}
+											points={activeSegment.points}
 											stroke={pathColor}
 											fill={pathColor}
 											strokeWidth={strokeWidth}
@@ -425,23 +482,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 											pointerLength={10}
 											pointerWidth={10}
 										/>
-									))}
-								</Layer>
-							)}
-
-							{layers.includes("active-segment") && activeSegment && (
-								<Layer listening={false}>
-									<Arrow
-										points={activeSegment.points}
-										stroke={pathColor}
-										fill={pathColor}
-										strokeWidth={strokeWidth}
-										lineCap="round"
-										lineJoin="round"
-										opacity={0.8}
-										pointerLength={10}
-										pointerWidth={10}
-									/>
+									)}
 								</Layer>
 							)}
 
@@ -553,13 +594,6 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 											{hoveredMarker.cumulativeDistance}
 										</span>
 									</div>
-									{/* <div className="flex justify-between gap-3">
-										<span>Canvas Pos:</span>
-										<span className="font-mono text-[10px]">
-											{Math.round(hoveredMarker.x)},{" "}
-											{Math.round(hoveredMarker.y)}
-										</span>
-									</div> */}
 								</div>
 							</div>
 						)}
