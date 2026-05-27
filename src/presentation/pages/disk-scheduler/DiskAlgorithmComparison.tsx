@@ -19,10 +19,10 @@ interface DiskAlgorithmComparisonProps {
 export function DiskAlgorithmComparison({ metrics, onAlgorithmSelect }: DiskAlgorithmComparisonProps) {
   return (
     <Card className="shadow-none border-none bg-transparent">
-      <CardHeader className="px-0">
+      <CardHeader className="">
         <CardTitle className="text-lg font-bold tracking-tight">Algorithm Comparison</CardTitle>
       </CardHeader>
-      <CardContent className="px-0">
+      <CardContent className="">
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart

@@ -14,6 +14,10 @@ interface DiskSettingsCardProps {
   highlightCurrent: boolean;
   markerLabelSize: number;
   tickLabelSize: number;
+  verticalSpacing: number;
+  showMarkerLabels: boolean;
+  showTickLabels: boolean;
+  showSequenceTicks: boolean;
   onGhostChange: (value: boolean) => void;
   onAcademicChange: (value: boolean) => void;
   onIncludeEdgesChange: (value: boolean) => void;
@@ -22,6 +26,10 @@ interface DiskSettingsCardProps {
   onHighlightCurrentChange: (value: boolean) => void;
   onMarkerLabelSizeChange: (value: number) => void;
   onTickLabelSizeChange: (value: number) => void;
+  onVerticalSpacingChange: (value: number) => void;
+  onShowMarkerLabelsChange: (value: boolean) => void;
+  onShowTickLabelsChange: (value: boolean) => void;
+  onShowSequenceTicksChange: (value: boolean) => void;
 }
 
 export function DiskSettingsCard({
@@ -34,6 +42,10 @@ export function DiskSettingsCard({
   highlightCurrent,
   markerLabelSize,
   tickLabelSize,
+  verticalSpacing,
+  showMarkerLabels,
+  showTickLabels,
+  showSequenceTicks,
   onGhostChange,
   onAcademicChange,
   onIncludeEdgesChange,
@@ -42,6 +54,10 @@ export function DiskSettingsCard({
   onHighlightCurrentChange,
   onMarkerLabelSizeChange,
   onTickLabelSizeChange,
+  onVerticalSpacingChange,
+  onShowMarkerLabelsChange,
+  onShowTickLabelsChange,
+  onShowSequenceTicksChange,
 }: DiskSettingsCardProps) {
   const showIncludeEdges = algorithm === 'SCAN' || algorithm === 'C_SCAN';
 
@@ -75,6 +91,21 @@ export function DiskSettingsCard({
           <div className="flex items-center justify-between gap-4">
             <Label className="text-sm font-medium">Highlight Current</Label>
             <Switch checked={highlightCurrent} onCheckedChange={onHighlightCurrentChange} />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-sm font-medium">Show Marker Labels</Label>
+            <Switch checked={showMarkerLabels} onCheckedChange={onShowMarkerLabelsChange} />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-sm font-medium">Show Tick Labels</Label>
+            <Switch checked={showTickLabels} onCheckedChange={onShowTickLabelsChange} />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-sm font-medium">Show Sequence Ticks</Label>
+            <Switch checked={showSequenceTicks} onCheckedChange={onShowSequenceTicksChange} />
           </div>
 
           {showIncludeEdges && (
@@ -117,8 +148,25 @@ export function DiskSettingsCard({
             onValueChange={([value]) => onTickLabelSizeChange(value)}
             className="py-2"
           />
+        </div>
+
+        <div className="space-y-4 pt-2 border-t">
+          <div className="flex items-center justify-between gap-3">
+            <Label className="text-sm font-medium">Vertical Spacing (Y)</Label>
+            <span className="text-xs font-mono font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+              {verticalSpacing}px
+            </span>
+          </div>
+          <Slider
+            min={40}
+            max={200}
+            step={5}
+            value={[verticalSpacing]}
+            onValueChange={([value]) => onVerticalSpacingChange(value)}
+            className="py-2"
+          />
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Adjust the font size of cylinder marks displayed at the bottom of the canvas.
+            Adjust the spacing between seek steps and toggle various axis labels.
           </p>
         </div>
       </CardContent>

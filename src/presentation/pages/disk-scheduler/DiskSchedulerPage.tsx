@@ -23,6 +23,10 @@ export function DiskSchedulerPage() {
 	const [showGrid, setShowGrid] = useState(true);
 	const [showHead, setShowHead] = useState(true);
 	const [highlightCurrent, setHighlightCurrent] = useState(true);
+	const [verticalSpacing, setVerticalSpacing] = useState(86);
+	const [showMarkerLabels, setShowMarkerLabels] = useState(true);
+	const [showTickLabels, setShowTickLabels] = useState(true);
+	const [showSequenceTicks, setShowSequenceTicks] = useState(false);
 
 	const {
 		input,
@@ -113,6 +117,10 @@ export function DiskSchedulerPage() {
 							highlightCurrent={highlightCurrent}
 							markerLabelSize={markerLabelSize}
 							tickLabelSize={tickLabelSize}
+							verticalSpacing={verticalSpacing}
+							showMarkerLabels={showMarkerLabels}
+							showTickLabels={showTickLabels}
+							showSequenceTicks={showSequenceTicks}
 							onGhostChange={toggleGhostPreview}
 							onAcademicChange={toggleAcademicMode}
 							onIncludeEdgesChange={(value) => {
@@ -127,6 +135,10 @@ export function DiskSchedulerPage() {
 							onHighlightCurrentChange={setHighlightCurrent}
 							onMarkerLabelSizeChange={setMarkerLabelSize}
 							onTickLabelSizeChange={setTickLabelSize}
+							onVerticalSpacingChange={setVerticalSpacing}
+							onShowMarkerLabelsChange={setShowMarkerLabels}
+							onShowTickLabelsChange={setShowTickLabels}
+							onShowSequenceTicksChange={setShowSequenceTicks}
 						/>
 
 						<Button
@@ -152,6 +164,10 @@ export function DiskSchedulerPage() {
 									maxCylinder={input.maxCylinder}
 									markerLabelSize={markerLabelSize}
 									tickLabelSize={tickLabelSize}
+									verticalSpacing={verticalSpacing}
+									showMarkerLabels={showMarkerLabels}
+									showTickLabels={showTickLabels}
+									showSequenceTicks={showSequenceTicks}
 									onExport={(options) => {
 										diskCanvasRef.current?.exportImage({
 											format: options.format,
@@ -162,8 +178,8 @@ export function DiskSchedulerPage() {
 								/>
 								
 								{result && (
-									<Card className="border-primary/10 bg-primary/5 shadow-none">
-										<CardContent className="p-4">
+									<Card className="border-primary/10 shadow-none">
+										<CardContent className="px-4">
 											<div className="flex flex-col gap-3">
 												<span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">
 													Full Traversal Path
@@ -189,7 +205,7 @@ export function DiskSchedulerPage() {
 								)}
 							</div>
 
-							<Card className="mx-auto w-full max-w-4xl shadow-none">
+							<Card className="mx-auto w-full shadow-none">
 								<CardContent className="pt-6">
 									<PlaybackControls
 										isPlaying={isPlaying}

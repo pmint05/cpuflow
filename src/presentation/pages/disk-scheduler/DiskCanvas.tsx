@@ -36,6 +36,10 @@ interface DiskCanvasProps {
 	maxCylinder: number;
 	markerLabelSize: number;
 	tickLabelSize: number;
+	verticalSpacing: number;
+	showMarkerLabels: boolean;
+	showTickLabels: boolean;
+	showSequenceTicks: boolean;
 	onExport: (options: {
 		format: "PNG" | "JPEG";
 		quality: number;
@@ -69,11 +73,10 @@ type MarkerState = {
 };
 
 const STAGE_WIDTH = 920;
-const MARKER_SPACING_Y = 86;
-const AXIS_PADDING_X = 56;
 const AXIS_PADDING_Y = 56;
 const BOTTOM_AXIS_HEIGHT = 48; // Space for labels at the bottom
 const JUMP_DASH = [10, 16, 2, 16];
+const HORIZONTAL_PADDING = 0; // Forced to 0 as requested
 
 export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 	function DiskCanvas(
@@ -87,6 +90,10 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 			maxCylinder,
 			markerLabelSize,
 			tickLabelSize,
+			verticalSpacing,
+			showMarkerLabels,
+			showTickLabels,
+			showSequenceTicks,
 			onExport,
 		}: DiskCanvasProps,
 		ref,
@@ -120,12 +127,17 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 
 		const data = useMemo(() => result?.seekSequence ?? [], [result]);
 		const stepCount = result?.steps.length ?? 0;
-		const stageHeight = Math.max(
-			420,
-			AXIS_PADDING_Y * 2 +
-				Math.max(stepCount, 1) * MARKER_SPACING_Y +
-				BOTTOM_AXIS_HEIGHT,
+		const stageHeight = useMemo(
+			() =>
+				Math.max(
+					420,
+					AXIS_PADDING_Y * 2 +
+						Math.max(stepCount, 1) * verticalSpacing +
+						BOTTOM_AXIS_HEIGHT,
+				),
+			[stepCount, verticalSpacing],
 		);
+
 		const currentPointIndex = Math.min(
 			currentStep,
 			Math.max(data.length - 1, 0),
@@ -145,11 +157,11 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					cylinder,
 					maxCylinder,
 					width: stageWidth,
-					paddingX: AXIS_PADDING_X,
+					paddingX: HORIZONTAL_PADDING,
 				});
 				const y = stepToY({
 					stepIndex: index,
-					stepHeight: MARKER_SPACING_Y,
+					stepHeight: verticalSpacing,
 					paddingY: AXIS_PADDING_Y,
 				});
 
@@ -165,14 +177,14 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					y,
 				};
 			});
-		}, [data, maxCylinder, result, stageWidth]);
+		}, [data, maxCylinder, result, stageWidth, verticalSpacing]);
 
 		const pointsBounds = useMemo(() => {
 			if (markers.length === 0) {
 				return {
-					minX: AXIS_PADDING_X,
+					minX: HORIZONTAL_PADDING,
 					minY: AXIS_PADDING_Y,
-					maxX: stageWidth - AXIS_PADDING_X,
+					maxX: stageWidth - HORIZONTAL_PADDING,
 					maxY: stageHeight - AXIS_PADDING_Y,
 				};
 			}
@@ -199,22 +211,22 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					cylinder: from,
 					maxCylinder,
 					width: stageWidth,
-					paddingX: AXIS_PADDING_X,
+					paddingX: HORIZONTAL_PADDING,
 				});
 				const toX = cylinderToX({
 					cylinder: to,
 					maxCylinder,
 					width: stageWidth,
-					paddingX: AXIS_PADDING_X,
+					paddingX: HORIZONTAL_PADDING,
 				});
 				const y1 = stepToY({
 					stepIndex: index,
-					stepHeight: MARKER_SPACING_Y,
+					stepHeight: verticalSpacing,
 					paddingY: AXIS_PADDING_Y,
 				});
 				const y2 = stepToY({
 					stepIndex: index + 1,
-					stepHeight: MARKER_SPACING_Y,
+					stepHeight: verticalSpacing,
 					paddingY: AXIS_PADDING_Y,
 				});
 
@@ -236,7 +248,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					type: step.type,
 				};
 			});
-		}, [result, maxCylinder, stageWidth, markerRadius]);
+		}, [result, maxCylinder, stageWidth, markerRadius, verticalSpacing]);
 
 		const completedSegments = segments.slice(0, Math.max(0, currentStep - 1));
 		const activeSegmentIndex =
@@ -250,18 +262,47 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 		const futureSegments = segments.slice(currentStep);
 
 		const gridLines = useMemo(() => {
-			const ticks = 6;
-			return Array.from({ length: ticks + 1 }, (_, index) => {
-				const cylinder = Math.round((maxCylinder / ticks) * index);
+			// Base ticks
+			const ticksCount = 6;
+			const baseTicks = Array.from({ length: ticksCount + 1 }, (_, index) => {
+				const cylinder = Math.round((maxCylinder / ticksCount) * index);
 				const x = cylinderToX({
 					cylinder,
 					maxCylinder,
 					width: stageWidth,
-					paddingX: AXIS_PADDING_X,
+					paddingX: HORIZONTAL_PADDING,
 				});
-				return { cylinder, x };
+				return { cylinder, x, isSequence: false };
 			});
-		}, [maxCylinder, stageWidth]);
+
+			if (!showSequenceTicks || !result) return baseTicks;
+
+			// Sequence ticks
+			const uniqueCylinders = Array.from(new Set(result.seekSequence));
+			const sequenceTicks = uniqueCylinders.map((cylinder) => {
+				const x = cylinderToX({
+					cylinder,
+					maxCylinder,
+					width: stageWidth,
+					paddingX: HORIZONTAL_PADDING,
+				});
+				return { cylinder, x, isSequence: true };
+			});
+
+			// Merge and remove duplicates (prefer sequence ticks for labels if they overlap perfectly)
+			const merged = [...baseTicks];
+			sequenceTicks.forEach((st) => {
+				if (!merged.some((bt) => bt.cylinder === st.cylinder)) {
+					merged.push(st);
+				} else {
+					// Mark existing base tick as sequence if it's in the sequence
+					const existing = merged.find((bt) => bt.cylinder === st.cylinder);
+					if (existing) existing.isSequence = true;
+				}
+			});
+
+			return merged.sort((a, b) => a.cylinder - b.cylinder);
+		}, [maxCylinder, stageWidth, showSequenceTicks, result]);
 
 		const layers = getDiskRenderLayers();
 
@@ -356,10 +397,10 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 											<Line
 												key={`row-${index}`}
 												points={[
-													AXIS_PADDING_X,
-													AXIS_PADDING_Y + index * MARKER_SPACING_Y,
-													stageWidth - AXIS_PADDING_X,
-													AXIS_PADDING_Y + index * MARKER_SPACING_Y,
+													HORIZONTAL_PADDING,
+													AXIS_PADDING_Y + index * verticalSpacing,
+													stageWidth - HORIZONTAL_PADDING,
+													AXIS_PADDING_Y + index * verticalSpacing,
 												]}
 												stroke="rgba(100, 116, 139, 0.25)"
 												strokeWidth={1.5}
@@ -368,7 +409,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 										),
 									)}
 									{gridLines.map((tick) => (
-										<Group key={`tick-${tick.cylinder}`}>
+										<Group key={`tick-${tick.cylinder}-${tick.isSequence}`}>
 											<Line
 												points={[
 													tick.x,
@@ -376,20 +417,22 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 													tick.x,
 													stageHeight - BOTTOM_AXIS_HEIGHT - 10,
 												]}
-												stroke="rgba(100, 116, 139, 0.2)"
-												strokeWidth={1.2}
-												dash={[4, 8]}
+												stroke={tick.isSequence ? "rgba(59, 130, 246, 0.4)" : "rgba(100, 116, 139, 0.2)"}
+												strokeWidth={tick.isSequence ? 2 : 1.2}
+												dash={tick.isSequence ? [] : [4, 8]}
 											/>
-											<Text
-												x={tick.x - 25}
-												y={stageHeight - BOTTOM_AXIS_HEIGHT + 4}
-												width={50}
-												align="center"
-												text={String(tick.cylinder)}
-												fontSize={tickLabelSize}
-												fontStyle="bold"
-												fill="rgba(71, 85, 105, 0.9)"
-											/>
+											{showTickLabels && (
+												<Text
+													x={tick.x - 25}
+													y={stageHeight - BOTTOM_AXIS_HEIGHT + 4}
+													width={50}
+													align="center"
+													text={String(tick.cylinder)}
+													fontSize={tickLabelSize}
+													fontStyle="bold"
+													fill={tick.isSequence ? "rgba(59, 130, 246, 1)" : "rgba(71, 85, 105, 0.9)"}
+												/>
+											)}
 										</Group>
 									))}
 								</Layer>
@@ -493,9 +536,9 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 											<Circle
 												x={marker.x}
 												y={marker.y}
-												radius={markerRadius}
+												radius={showMarkerLabels ? markerRadius : markerRadius / 3}
 												fill={
-													index === currentPointIndex && highlightCurrent
+													(index === currentPointIndex && highlightCurrent) || !showMarkerLabels
 														? pathColor
 														: "#ffffff"
 												}
@@ -505,21 +548,23 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 												onMouseMove={() => setHoveredMarker(marker)}
 												onMouseLeave={() => setHoveredMarker(null)}
 											/>
-											<Text
-												x={marker.x - markerRadius}
-												y={marker.y - markerLabelSize / 2 + 1}
-												width={markerRadius * 2}
-												align="center"
-												text={marker.label}
-												fontSize={markerLabelSize}
-												fontStyle="bold"
-												fill={
-													index === currentPointIndex && highlightCurrent
-														? "#ffffff"
-														: pathColor
-												}
-												listening={false}
-											/>
+											{showMarkerLabels && (
+												<Text
+													x={marker.x - markerRadius}
+													y={marker.y - markerLabelSize / 2 + 1}
+													width={markerRadius * 2}
+													align="center"
+													text={marker.label}
+													fontSize={markerLabelSize}
+													fontStyle="bold"
+													fill={
+														index === currentPointIndex && highlightCurrent
+															? "#ffffff"
+															: pathColor
+													}
+													listening={false}
+												/>
+											)}
 										</Group>
 									))}
 								</Layer>
@@ -533,13 +578,13 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 												cylinder: currentHead,
 												maxCylinder,
 												width: stageWidth,
-												paddingX: AXIS_PADDING_X,
+												paddingX: HORIZONTAL_PADDING,
 											}) +
 											markerRadius +
 											10
 										}
 										y={
-											AXIS_PADDING_Y + currentPointIndex * MARKER_SPACING_Y - 12
+											AXIS_PADDING_Y + currentPointIndex * verticalSpacing - 12
 										}>
 										<Rect
 											width={46}
