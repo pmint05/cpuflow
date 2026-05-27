@@ -261,28 +261,36 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 					type: step.type,
 				};
 			});
-		}, [result, maxCylinder, stageWidth, markerRadius, verticalSpacing]);
+		}, [result, maxCylinder, stageWidth, verticalSpacing, markerRadius]);
 
-		const completedSegments = segments.slice(0, Math.max(0, currentStep));
-		const activeSegmentIndex =
-			currentStep < segments.length
-				? currentStep
-				: null;
-		const activeSegment =
-			activeSegmentIndex === null
-				? null
-				: (segments[activeSegmentIndex] ?? null);
-		const futureSegments = segments.slice(currentStep + 1);
+		const completedSegments = useMemo(() => {
+			if (!result) return [];
+			return segments.slice(0, currentStep);
+		}, [result, segments, currentStep]);
+
+		const activeSegment = useMemo(() => {
+			if (!result || !scannerModeEnabled || currentStep >= segments.length) {
+				return null;
+			}
+			return segments[currentStep] ?? null;
+		}, [result, segments, currentStep, scannerModeEnabled]);
+
+		const futureSegments = useMemo(() => {
+			if (!result) return [];
+			// Ghost path should always start from the current step to show what's coming next
+			// including the currently animating segment
+			return segments.slice(currentStep);
+		}, [result, segments, currentStep]);
 
 		const interpolatedActivePoints = useMemo(() => {
-			if (!activeSegment || !scannerModeEnabled) return activeSegment?.points ?? [];
+			if (!activeSegment) return [];
 			
 			const [x1, y1, x2, y2] = activeSegment.points;
 			const currentX = x1 + (x2 - x1) * animationProgress;
 			const currentY = y1 + (y2 - y1) * animationProgress;
 			
 			return [x1, y1, currentX, currentY];
-		}, [activeSegment, scannerModeEnabled, animationProgress]);
+		}, [activeSegment, animationProgress]);
 
 		const scannerHeadX = useMemo(() => {
 			return cylinderToX({
@@ -533,7 +541,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 								</Layer>
 							)}
 
-							{layers.includes("active-segment") && activeSegment && (
+							{layers.includes("active-segment") && activeSegment && scannerModeEnabled && (
 								<Layer listening={false}>
 									{activeSegment.type === "JUMP" ? (
 										<Line

@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { PageBreadcrumb } from "@presentation/components/shared/PageBreadcrumb";
-import { useDiskScheduler } from "@app/disk-scheduler/useDiskScheduler";
+import { useDiskScheduler, type DiskSchedulerInput, DISK_SCHEDULER_DEFAULT_INPUT } from "@app/disk-scheduler/useDiskScheduler";
 import { useDiskUrlState } from "@presentation/hooks/useDiskUrlState";
 import { DiskInputForm } from "./DiskInputForm";
 import { PlaybackControls } from "./PlaybackControls";
@@ -14,34 +14,33 @@ import { DiskSettingsCard } from "./DiskSettingsCard";
 import { Card, CardContent } from "@presentation/components/ui/card";
 import { Badge } from "@presentation/components/ui/badge";
 import { ArrowRightIcon } from "lucide-react";
+import {
+	parseQueue,
+} from "@infra/serializers/disk-scheduler-config-serializer";
+import type { DiskInputFormValues } from "@domain/validators/disk-input-validator";
 
 export function DiskSchedulerPage() {
 	const [urlConfig, setUrlConfig] = useDiskUrlState();
 	const diskCanvasRef = useRef<DiskCanvasHandle | null>(null);
-	const [markerLabelSize, setMarkerLabelSize] = useState(12);
-	const [tickLabelSize, setTickLabelSize] = useState(11);
-	const [showGrid, setShowGrid] = useState(true);
-	const [showHead, setShowHead] = useState(true);
-	const [highlightCurrent, setHighlightCurrent] = useState(true);
-	const [verticalSpacing, setVerticalSpacing] = useState(86);
-	const [showMarkerLabels, setShowMarkerLabels] = useState(true);
-	const [showTickLabels, setShowTickLabels] = useState(true);
-	const [showSequenceTicks, setShowSequenceTicks] = useState(false);
+
+	// Separate state for actual simulation execution
+	const [activeSimulationInput, setActiveSimulationInput] = useState<DiskSchedulerInput>(() => ({
+		algorithm: urlConfig.algo,
+		initialHead: urlConfig.head,
+		queue: urlConfig.queue,
+		maxCylinder: urlConfig.max,
+		direction: urlConfig.direction,
+		includeEdges: urlConfig.includeEdges,
+		scannerMode: urlConfig.scanner,
+	}));
 
 	const {
-		input,
 		result,
 		comparisonMetrics,
 		currentStep,
 		animationProgress,
 		isPlaying,
 		playbackSpeed,
-		ghostPreviewEnabled,
-		academicModeEnabled,
-		scannerModeEnabled,
-		setInput,
-		runSimulation,
-		runComparison,
 		play,
 		pause,
 		reset,
@@ -49,19 +48,46 @@ export function DiskSchedulerPage() {
 		previousStep,
 		seekToStep,
 		setPlaybackSpeed,
-		toggleGhostPreview,
-		toggleAcademicMode,
-		toggleScannerMode,
-	} = useDiskScheduler({
-		algorithm: urlConfig.algo,
-		initialHead: urlConfig.head,
-		queue: urlConfig.queue,
-		maxCylinder: urlConfig.max,
-		direction: urlConfig.direction,
-		includeEdges: urlConfig.includeEdges,
-	});
+	} = useDiskScheduler(activeSimulationInput);
 
-	const queueInput = useMemo(() => input.queue.join(", "), [input.queue]);
+	const handleUrlConfigChange = <K extends keyof typeof urlConfig>(
+		key: K,
+		value: (typeof urlConfig)[K],
+	) => {
+		const nextConfig = { ...urlConfig, [key]: value };
+		setUrlConfig(nextConfig);
+
+		// If it's a visualization toggle (not algorithm input), update simulation reactively
+		if (key === "scanner") {
+			setActiveSimulationInput(prev => ({ ...prev, scannerMode: value as boolean }));
+		}
+	};
+
+	// Real-time URL synchronization (debounce is handled in hook)
+	const handleFormValuesChange = (formValues: DiskInputFormValues) => {
+		setUrlConfig({
+			...urlConfig,
+			algo: formValues.algorithm,
+			head: formValues.initialHead,
+			max: formValues.maxCylinder,
+			direction: formValues.direction,
+			includeEdges: formValues.includeEdges,
+			queue: parseQueue(formValues.queueInput, formValues.maxCylinder),
+		});
+	};
+
+	// Explicit execution trigger
+	const handleRunSimulation = (formValues: DiskInputFormValues) => {
+		setActiveSimulationInput({
+			algorithm: formValues.algorithm,
+			initialHead: formValues.initialHead,
+			maxCylinder: formValues.maxCylinder,
+			direction: formValues.direction,
+			includeEdges: formValues.includeEdges,
+			queue: parseQueue(formValues.queueInput, formValues.maxCylinder),
+			scannerMode: urlConfig.scanner,
+		});
+	};
 
 	return (
 		<div className="p-4 lg:p-8">
@@ -87,63 +113,63 @@ export function DiskSchedulerPage() {
 					{/* Left Column: Input & Configuration */}
 					<div className="space-y-6">
 						<DiskInputForm
-							key={`${input.algorithm}-${input.initialHead}-${input.queue.length}`}
-							algorithm={input.algorithm}
-							initialHead={input.initialHead}
-							direction={input.direction}
-							maxCylinder={input.maxCylinder}
-							queueInput={queueInput}
-							includeEdges={input.includeEdges ?? true}
-							onSubmit={(payload) => {
-								setInput(payload);
-								runSimulation(payload);
-								runComparison(payload);
-								setUrlConfig({
-									...urlConfig,
-									algo: payload.algorithm,
-									head: payload.initialHead,
-									direction: payload.direction,
-									max: payload.maxCylinder,
-									queue: payload.queue,
-									includeEdges: payload.includeEdges,
-								});
-							}}
+							algorithm={urlConfig.algo}
+							initialHead={urlConfig.head}
+							direction={urlConfig.direction}
+							maxCylinder={urlConfig.max}
+							queueInput={urlConfig.queue.join(", ")}
+							includeEdges={urlConfig.includeEdges}
+							onValuesChange={handleFormValuesChange}
+							onSubmit={handleRunSimulation}
 						/>
-
 						<DiskSettingsCard
-							algorithm={input.algorithm}
-							ghostEnabled={ghostPreviewEnabled}
-							academicEnabled={academicModeEnabled}
-							scannerEnabled={scannerModeEnabled}
-							includeEdges={input.includeEdges ?? true}
-							showGrid={showGrid}
-							showHead={showHead}
-							highlightCurrent={highlightCurrent}
-							markerLabelSize={markerLabelSize}
-							tickLabelSize={tickLabelSize}
-							verticalSpacing={verticalSpacing}
-							showMarkerLabels={showMarkerLabels}
-							showTickLabels={showTickLabels}
-							showSequenceTicks={showSequenceTicks}
-							onGhostChange={toggleGhostPreview}
-							onAcademicChange={toggleAcademicMode}
-							onScannerChange={toggleScannerMode}
+							algorithm={urlConfig.algo}
+							ghostEnabled={urlConfig.ghost}
+							academicEnabled={urlConfig.academic}
+							scannerEnabled={urlConfig.scanner}
+							includeEdges={urlConfig.includeEdges}
+							showGrid={urlConfig.grid}
+							showHead={urlConfig.headLabel}
+							highlightCurrent={urlConfig.highlight}
+							markerLabelSize={urlConfig.markerSize}
+							tickLabelSize={urlConfig.tickSize}
+							verticalSpacing={urlConfig.spacing}
+							showMarkerLabels={urlConfig.markerLabels}
+							showTickLabels={urlConfig.tickLabels}
+							showSequenceTicks={urlConfig.sequenceTicks}
+							onGhostChange={(value) => handleUrlConfigChange("ghost", value)}
+							onAcademicChange={(value) =>
+								handleUrlConfigChange("academic", value)
+							}
+							onScannerChange={(value) => handleUrlConfigChange("scanner", value)}
 							onIncludeEdgesChange={(value) => {
-								const nextInput = { ...input, includeEdges: value };
-								setInput(nextInput);
-								runSimulation(nextInput);
-								runComparison(nextInput);
-								setUrlConfig({ ...urlConfig, includeEdges: value });
+								handleUrlConfigChange("includeEdges", value);
 							}}
-							onShowGridChange={setShowGrid}
-							onShowHeadChange={setShowHead}
-							onHighlightCurrentChange={setHighlightCurrent}
-							onMarkerLabelSizeChange={setMarkerLabelSize}
-							onTickLabelSizeChange={setTickLabelSize}
-							onVerticalSpacingChange={setVerticalSpacing}
-							onShowMarkerLabelsChange={setShowMarkerLabels}
-							onShowTickLabelsChange={setShowTickLabels}
-							onShowSequenceTicksChange={setShowSequenceTicks}
+							onShowGridChange={(value) => handleUrlConfigChange("grid", value)}
+							onShowHeadChange={(value) =>
+								handleUrlConfigChange("headLabel", value)
+							}
+							onHighlightCurrentChange={(value) =>
+								handleUrlConfigChange("highlight", value)
+							}
+							onMarkerLabelSizeChange={(value) =>
+								handleUrlConfigChange("markerSize", value)
+							}
+							onTickLabelSizeChange={(value) =>
+								handleUrlConfigChange("tickSize", value)
+							}
+							onVerticalSpacingChange={(value) =>
+								handleUrlConfigChange("spacing", value)
+							}
+							onShowMarkerLabelsChange={(value) =>
+								handleUrlConfigChange("markerLabels", value)
+							}
+							onShowTickLabelsChange={(value) =>
+								handleUrlConfigChange("tickLabels", value)
+							}
+							onShowSequenceTicksChange={(value) =>
+								handleUrlConfigChange("sequenceTicks", value)
+							}
 						/>
 
 						<Button
@@ -163,18 +189,18 @@ export function DiskSchedulerPage() {
 									result={result}
 									currentStep={currentStep}
 									animationProgress={animationProgress}
-									scannerModeEnabled={scannerModeEnabled}
-									ghostEnabled={ghostPreviewEnabled}
-									showGrid={showGrid}
-									showHead={showHead}
-									highlightCurrent={highlightCurrent}
-									maxCylinder={input.maxCylinder}
-									markerLabelSize={markerLabelSize}
-									tickLabelSize={tickLabelSize}
-									verticalSpacing={verticalSpacing}
-									showMarkerLabels={showMarkerLabels}
-									showTickLabels={showTickLabels}
-									showSequenceTicks={showSequenceTicks}
+									scannerModeEnabled={urlConfig.scanner}
+									ghostEnabled={urlConfig.ghost}
+									showGrid={urlConfig.grid}
+									showHead={urlConfig.headLabel}
+									highlightCurrent={urlConfig.highlight}
+									maxCylinder={activeSimulationInput.maxCylinder}
+									markerLabelSize={urlConfig.markerSize}
+									tickLabelSize={urlConfig.tickSize}
+									verticalSpacing={urlConfig.spacing}
+									showMarkerLabels={urlConfig.markerLabels}
+									showTickLabels={urlConfig.tickLabels}
+									showSequenceTicks={urlConfig.sequenceTicks}
 									onExport={(options) => {
 										diskCanvasRef.current?.exportImage({
 											format: options.format,
@@ -233,9 +259,9 @@ export function DiskSchedulerPage() {
 							</Card>
 						</div>
 
-						{academicModeEnabled && (
+						{urlConfig.academic && (
 							<AcademicModePanel
-								enabled={academicModeEnabled}
+								enabled={urlConfig.academic}
 								result={result}
 								currentStep={currentStep}
 							/>
@@ -248,11 +274,13 @@ export function DiskSchedulerPage() {
 						<DiskAlgorithmComparison
 							metrics={comparisonMetrics}
 							onAlgorithmSelect={(algorithm) => {
-								const nextInput = { ...input, algorithm };
-								setInput(nextInput);
-								runSimulation(nextInput);
-								runComparison(nextInput);
-								setUrlConfig({ ...urlConfig, algo: algorithm });
+								const nextConfig = { ...urlConfig, algo: algorithm };
+								setUrlConfig(nextConfig);
+								// Algorithm comparison click should also trigger simulation update
+								setActiveSimulationInput(prev => ({
+									...prev,
+									algorithm,
+								}));
 							}}
 						/>
 					</div>

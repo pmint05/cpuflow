@@ -19,10 +19,10 @@ export interface DiskSchedulerInput {
   maxCylinder: number;
   direction: DiskDirection;
   includeEdges?: boolean;
+  scannerMode?: boolean;
 }
 
 export interface DiskSchedulerState {
-  input: DiskSchedulerInput;
   result: DiskSimulationResult | null;
   comparisonResults: DiskSimulationResult[];
   comparisonMetrics: DiskComparisonMetrics[];
@@ -30,15 +30,9 @@ export interface DiskSchedulerState {
   animationProgress: number;
   isPlaying: boolean;
   playbackSpeed: number;
-  ghostPreviewEnabled: boolean;
-  academicModeEnabled: boolean;
-  scannerModeEnabled: boolean;
 }
 
 export interface DiskSchedulerActions {
-  setInput: (next: DiskSchedulerInput) => void;
-  runSimulation: (nextInput?: DiskSchedulerInput) => void;
-  runComparison: (nextInput?: DiskSchedulerInput) => void;
   play: () => void;
   pause: () => void;
   reset: () => void;
@@ -46,9 +40,6 @@ export interface DiskSchedulerActions {
   previousStep: () => void;
   seekToStep: (step: number) => void;
   setPlaybackSpeed: (speed: number) => void;
-  toggleGhostPreview: () => void;
-  toggleAcademicMode: () => void;
-  toggleScannerMode: () => void;
 }
 
 export const DISK_SCHEDULER_DEFAULT_INPUT: DiskSchedulerInput = {
@@ -58,6 +49,7 @@ export const DISK_SCHEDULER_DEFAULT_INPUT: DiskSchedulerInput = {
   maxCylinder: 4999,
   direction: 'RIGHT',
   includeEdges: true,
+  scannerMode: true,
 };
 
 const ALL_DISK_ALGORITHMS: DiskSchedulingAlgorithm[] = [
@@ -125,51 +117,40 @@ function executeAlgorithm(
 }
 
 export function useDiskScheduler(
-  initialInput: DiskSchedulerInput = DISK_SCHEDULER_DEFAULT_INPUT
+  input: DiskSchedulerInput = DISK_SCHEDULER_DEFAULT_INPUT
 ): DiskSchedulerState & DiskSchedulerActions {
-  const [input, setInput] = useState<DiskSchedulerInput>(initialInput);
-  const [result, setResult] = useState<DiskSimulationResult | null>(() =>
-    executeAlgorithm(initialInput.algorithm, initialInput)
-  );
-  const [comparisonResults, setComparisonResults] = useState<DiskSimulationResult[]>(() =>
-    ALL_DISK_ALGORITHMS.map((algorithm) =>
-      executeAlgorithm(algorithm, {
-        ...initialInput,
-        algorithm,
-      })
-    )
-  );
   const [currentStep, setCurrentStep] = useState(0);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeedState] = useState(DEFAULT_PLAYBACK_SPEED);
-  const [ghostPreviewEnabled, setGhostPreviewEnabled] = useState(true);
-  const [academicModeEnabled, setAcademicModeEnabled] = useState(false);
-  const [scannerModeEnabled, setScannerModeEnabled] = useState(true);
 
   const frameRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
   const progressStartTimeRef = useRef<number | null>(null);
 
-  const runSimulation = useCallback((nextInput?: DiskSchedulerInput) => {
-    const source = nextInput ?? input;
-    const nextResult = executeAlgorithm(source.algorithm, source);
-    setResult(nextResult);
+  // Destructure input for stable dependencies
+  const { algorithm, initialHead, queue, maxCylinder, direction, includeEdges, scannerMode } = input;
+
+  const result = useMemo(() => {
+    return executeAlgorithm(algorithm, { algorithm, initialHead, queue, maxCylinder, direction, includeEdges });
+  }, [algorithm, initialHead, queue, maxCylinder, direction, includeEdges]);
+
+  const comparisonResults = useMemo(() => {
+    return ALL_DISK_ALGORITHMS.map((algo) =>
+      executeAlgorithm(algo, { algorithm: algo, initialHead, queue, maxCylinder, direction, includeEdges })
+    );
+  }, [initialHead, queue, maxCylinder, direction, includeEdges]);
+
+  const comparisonMetrics = useMemo(
+    () => comparisonResults.map(calculateComparisonMetrics),
+    [comparisonResults]
+  );
+
+  useEffect(() => {
     setCurrentStep(0);
     setAnimationProgress(0);
     setIsPlaying(false);
-  }, [input]);
-
-  const runComparison = useCallback((nextInput?: DiskSchedulerInput) => {
-    const source = nextInput ?? input;
-    const results = ALL_DISK_ALGORITHMS.map((algorithm) =>
-      executeAlgorithm(algorithm, {
-        ...source,
-        algorithm,
-      })
-    );
-    setComparisonResults(results);
-  }, [input]);
+  }, [result]);
 
   const play = useCallback(() => {
     if (!result || result.steps.length === 0) return;
@@ -215,18 +196,6 @@ export function useDiskScheduler(
     setPlaybackSpeedState(speed);
   }, []);
 
-  const toggleGhostPreview = useCallback(() => {
-    setGhostPreviewEnabled((prev) => !prev);
-  }, []);
-
-  const toggleAcademicMode = useCallback(() => {
-    setAcademicModeEnabled((prev) => !prev);
-  }, []);
-
-  const toggleScannerMode = useCallback(() => {
-    setScannerModeEnabled((prev) => !prev);
-  }, []);
-
   useEffect(() => {
     if (!isPlaying || !result || result.steps.length === 0) {
       if (frameRef.current !== null) {
@@ -249,7 +218,7 @@ export function useDiskScheduler(
         progressStartTimeRef.current = time;
       }
 
-      if (scannerModeEnabled) {
+      if (scannerMode) {
         const elapsed = time - progressStartTimeRef.current;
         const progress = Math.min(1, elapsed / msPerStep);
         setAnimationProgress(progress);
@@ -296,15 +265,9 @@ export function useDiskScheduler(
       lastTickRef.current = null;
       progressStartTimeRef.current = null;
     };
-  }, [isPlaying, playbackSpeed, result, scannerModeEnabled]);
-
-  const comparisonMetrics = useMemo(
-    () => comparisonResults.map(calculateComparisonMetrics),
-    [comparisonResults]
-  );
+  }, [isPlaying, playbackSpeed, result, scannerMode]);
 
   return {
-    input,
     result,
     comparisonResults,
     comparisonMetrics,
@@ -312,12 +275,6 @@ export function useDiskScheduler(
     animationProgress,
     isPlaying,
     playbackSpeed,
-    ghostPreviewEnabled,
-    academicModeEnabled,
-    scannerModeEnabled,
-    setInput,
-    runSimulation,
-    runComparison,
     play,
     pause,
     reset,
@@ -325,8 +282,5 @@ export function useDiskScheduler(
     previousStep,
     seekToStep,
     setPlaybackSpeed,
-    toggleGhostPreview,
-    toggleAcademicMode,
-    toggleScannerMode,
   };
 }

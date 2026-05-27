@@ -4,29 +4,57 @@ import type {
 } from '@domain/types/disk-scheduling';
 
 export interface DiskSchedulerConfig {
+  // Algorithm
   algo: DiskSchedulingAlgorithm;
   head: number;
   direction: DiskDirection;
   max: number;
   queue: number[];
+  includeEdges: boolean;
+  // Playback
   speed: number;
+  // Modes
   ghost: boolean;
   academic: boolean;
-  explain: boolean;
-  includeEdges: boolean;
+  scanner: boolean;
+  // Canvas View
+  grid: boolean;
+  headLabel: boolean;
+  highlight: boolean;
+  markerLabels: boolean;
+  tickLabels: boolean;
+  sequenceTicks: boolean;
+  // Canvas Metrics
+  markerSize: number;
+  tickSize: number;
+  spacing: number;
 }
 
 export const DISK_SCHEDULER_DEFAULTS: DiskSchedulerConfig = {
+  // Algorithm
   algo: 'SCAN',
   head: 2150,
   direction: 'RIGHT',
   max: 4999,
-  queue: [2069, 1212, 2296],
+  queue: [2069, 1212, 2296, 2800, 544, 1618, 356, 1523, 4965, 3681],
+  includeEdges: true,
+  // Playback
   speed: 1,
+  // Modes
   ghost: true,
   academic: false,
-  explain: true,
-  includeEdges: true,
+  scanner: true,
+  // Canvas View
+  grid: true,
+  headLabel: true,
+  highlight: true,
+  markerLabels: true,
+  tickLabels: true,
+  sequenceTicks: false,
+  // Canvas Metrics
+  markerSize: 12,
+  tickSize: 11,
+  spacing: 86,
 };
 
 const ALGORITHMS: DiskSchedulingAlgorithm[] = [
@@ -71,11 +99,11 @@ function asDirection(value: string | null): DiskDirection {
   return DISK_SCHEDULER_DEFAULTS.direction;
 }
 
-function parseQueue(value: string | null, maxCylinder: number): number[] {
+export function parseQueue(value: string | null, maxCylinder: number): number[] {
   if (!value) return DISK_SCHEDULER_DEFAULTS.queue;
 
   const parsed = value
-    .split(',')
+    .split(/[\s,]+/)
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .map((item) => Number(item))
@@ -93,32 +121,60 @@ export function decodeDiskSchedulerConfig(search: string): DiskSchedulerConfig {
   const speed = Math.max(0.25, asNumber(params.get('speed'), DISK_SCHEDULER_DEFAULTS.speed));
 
   return {
+    // Algorithm
     algo: asAlgorithm(params.get('algo')),
     head,
     direction: asDirection(params.get('direction')),
     max,
     queue: parseQueue(params.get('queue'), max),
+    includeEdges: asBoolean(params.get('edges'), DISK_SCHEDULER_DEFAULTS.includeEdges),
+    // Playback
     speed,
+    // Modes
     ghost: asBoolean(params.get('ghost'), DISK_SCHEDULER_DEFAULTS.ghost),
     academic: asBoolean(params.get('academic'), DISK_SCHEDULER_DEFAULTS.academic),
-    explain: asBoolean(params.get('explain'), DISK_SCHEDULER_DEFAULTS.explain),
-    includeEdges: asBoolean(params.get('includeEdges'), DISK_SCHEDULER_DEFAULTS.includeEdges),
+    scanner: asBoolean(params.get('scanner'), DISK_SCHEDULER_DEFAULTS.scanner),
+    // Canvas View
+    grid: asBoolean(params.get('grid'), DISK_SCHEDULER_DEFAULTS.grid),
+    headLabel: asBoolean(params.get('headLabel'), DISK_SCHEDULER_DEFAULTS.headLabel),
+    highlight: asBoolean(params.get('highlight'), DISK_SCHEDULER_DEFAULTS.highlight),
+    markerLabels: asBoolean(params.get('markerLabels'), DISK_SCHEDULER_DEFAULTS.markerLabels),
+    tickLabels: asBoolean(params.get('tickLabels'), DISK_SCHEDULER_DEFAULTS.tickLabels),
+    sequenceTicks: asBoolean(params.get('sequenceTicks'), DISK_SCHEDULER_DEFAULTS.sequenceTicks),
+    // Canvas Metrics
+    markerSize: asNumber(params.get('markerSize'), DISK_SCHEDULER_DEFAULTS.markerSize),
+    tickSize: asNumber(params.get('tickSize'), DISK_SCHEDULER_DEFAULTS.tickSize),
+    spacing: asNumber(params.get('spacing'), DISK_SCHEDULER_DEFAULTS.spacing),
   };
 }
 
 export function encodeDiskSchedulerConfig(config: DiskSchedulerConfig): string {
   const params = new URLSearchParams();
 
+  // Algorithm
   params.set('algo', config.algo);
   params.set('head', String(config.head));
   params.set('direction', config.direction);
   params.set('max', String(config.max));
   params.set('queue', config.queue.join(','));
+  params.set('edges', String(config.includeEdges));
+  // Playback
   params.set('speed', String(config.speed));
+  // Modes
   params.set('ghost', String(config.ghost));
   params.set('academic', String(config.academic));
-  params.set('explain', String(config.explain));
-  params.set('includeEdges', String(config.includeEdges));
+  params.set('scanner', String(config.scanner));
+  // Canvas View
+  params.set('grid', String(config.grid));
+  params.set('headLabel', String(config.headLabel));
+  params.set('highlight', String(config.highlight));
+  params.set('markerLabels', String(config.markerLabels));
+  params.set('tickLabels', String(config.tickLabels));
+  params.set('sequenceTicks', String(config.sequenceTicks));
+  // Canvas Metrics
+  params.set('markerSize', String(config.markerSize));
+  params.set('tickSize', String(config.tickSize));
+  params.set('spacing', String(config.spacing));
 
   return params.toString();
 }

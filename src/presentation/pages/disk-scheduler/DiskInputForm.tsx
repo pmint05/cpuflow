@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  diskInputSchema,
+  type DiskInputFormValues,
+} from "@domain/validators/disk-input-validator";
+import { useEffect, useMemo } from "react";
 import { Button } from "@components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Input } from "@components/ui/input";
-import { Label } from "@components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -14,10 +19,9 @@ import type {
 	DiskDirection,
 	DiskSchedulingAlgorithm,
 } from "@domain/types/disk-scheduling";
-import {
-	getDiskAlgorithmDescription,
-	getDiskAlgorithmName,
-} from "@domain/algorithms/disk-scheduling";
+import { getDiskAlgorithmName } from "@domain/algorithms/disk-scheduling";
+import { parseQueue } from "@infra/serializers/disk-scheduler-config-serializer";
+import { Field, FieldContent, FieldLabel, FieldGroup, FieldError } from "@components/ui/field";
 
 interface DiskInputFormProps {
 	algorithm: DiskSchedulingAlgorithm;
@@ -26,14 +30,8 @@ interface DiskInputFormProps {
 	maxCylinder: number;
 	queueInput: string;
 	includeEdges: boolean;
-	onSubmit: (payload: {
-		algorithm: DiskSchedulingAlgorithm;
-		initialHead: number;
-		direction: DiskDirection;
-		maxCylinder: number;
-		queue: number[];
-		includeEdges: boolean;
-	}) => void;
+	onValuesChange: (values: DiskInputFormValues) => void;
+	onSubmit: (values: DiskInputFormValues) => void;
 }
 
 const ALGORITHMS: DiskSchedulingAlgorithm[] = [
@@ -45,16 +43,6 @@ const ALGORITHMS: DiskSchedulingAlgorithm[] = [
 	"C_LOOK",
 ];
 
-function parseQueue(input: string, maxCylinder: number): number[] {
-	return input
-		.split(/[\s,]+/)
-		.map((item) => item.trim())
-		.filter((item) => item.length > 0)
-		.map((item) => Number(item))
-		.filter((item) => Number.isFinite(item) && item >= 0 && item <= maxCylinder)
-		.map((item) => Math.trunc(item));
-}
-
 export function DiskInputForm({
 	algorithm,
 	initialHead,
@@ -62,137 +50,162 @@ export function DiskInputForm({
 	maxCylinder,
 	queueInput,
 	includeEdges,
+	onValuesChange,
 	onSubmit,
 }: DiskInputFormProps) {
-	const [localAlgorithm, setLocalAlgorithm] =
-		useState<DiskSchedulingAlgorithm>(algorithm);
-	const [localHead, setLocalHead] = useState(String(initialHead));
-	const [localDirection, setLocalDirection] =
-		useState<DiskDirection>(direction);
-	const [localMaxCylinder, setLocalMaxCylinder] = useState(String(maxCylinder));
-	const [localQueue, setLocalQueue] = useState(queueInput);
+	const form = useForm<DiskInputFormValues>({
+		resolver: zodResolver(diskInputSchema) as any,
+		defaultValues: {
+			algorithm,
+			initialHead: initialHead as any,
+			direction,
+			maxCylinder: maxCylinder as any,
+			queueInput,
+			includeEdges,
+		},
+		mode: "onChange",
+	});
+
+	// Hydration: Sync form with URL when props change
+	useEffect(() => {
+		form.reset({
+			algorithm,
+			initialHead,
+			direction,
+			maxCylinder,
+			queueInput,
+			includeEdges,
+		});
+	}, [algorithm, initialHead, direction, maxCylinder, queueInput, includeEdges, form]);
+
+	// Serialization: Notify parent of valid changes for URL update
+	useEffect(() => {
+		const subscription = form.watch((value, { name, type }) => {
+			if (type === "change") {
+				form.trigger().then(isValid => {
+					if (isValid) {
+						onValuesChange(value as DiskInputFormValues);
+					}
+				});
+			}
+		});
+		return () => subscription.unsubscribe();
+	}, [form, onValuesChange]);
+
+	const watchedQueue = form.watch("queueInput");
+	const watchedMax = form.watch("maxCylinder");
 
 	const queuePreview = useMemo(() => {
-		const maxValue = Number(localMaxCylinder);
-		if (!Number.isFinite(maxValue)) return [];
-		return parseQueue(localQueue, Math.max(1, Math.trunc(maxValue)));
-	}, [localMaxCylinder, localQueue]);
+		if (typeof watchedQueue !== "string" || typeof watchedMax !== "number") return [];
+		return parseQueue(watchedQueue, watchedMax);
+	}, [watchedQueue, watchedMax]);
 
 	return (
 		<Card className="shadow-none">
-		  <CardHeader>
-		    <CardTitle>Disk Input</CardTitle>
-		  </CardHeader>			<CardContent className="space-y-4">
-				<div className="space-y-2">
-					<Label>Algorithm</Label>
-					<Select
-						value={localAlgorithm}
-						onValueChange={(value) =>
-							setLocalAlgorithm(value as DiskSchedulingAlgorithm)
-						}>
-						<SelectTrigger>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent align="start" position="popper">
-							{ALGORITHMS.map((candidate) => (
-								<SelectItem key={candidate} value={candidate}>
-									<div className="flex flex-col items-start">
-										<span>{getDiskAlgorithmName(candidate)}</span>
-										{/* <span className="text-xs text-muted-foreground truncate">
-											{getDiskAlgorithmDescription(candidate)}
-										</span> */}
-									</div>
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div className="space-y-2">
-						<Label htmlFor="disk-head">Initial Head</Label>
-						<Input
-							id="disk-head"
-							type="number"
-							value={localHead}
-							onChange={(event) => setLocalHead(event.target.value)}
+			<CardHeader>
+				<CardTitle>Disk Input</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+					<FieldGroup>
+						<Controller
+							control={form.control}
+							name="algorithm"
+							render={({ field, fieldState: { error } }) => (
+								<Field>
+									<FieldLabel>Algorithm</FieldLabel>
+									<FieldContent>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<SelectTrigger>
+												<SelectValue placeholder="Select algorithm" />
+											</SelectTrigger>
+											<SelectContent>
+												{ALGORITHMS.map((algo) => (
+													<SelectItem key={algo} value={algo}>
+														{getDiskAlgorithmName(algo)}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FieldError errors={[error]} />
+									</FieldContent>
+								</Field>
+							)}
 						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="disk-max-cylinder">Max Cylinder</Label>
-						<Input
-							id="disk-max-cylinder"
-							type="number"
-							value={localMaxCylinder}
-							onChange={(event) => setLocalMaxCylinder(event.target.value)}
-							placeholder="Defaults to max(queue)"
+
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Controller
+								control={form.control}
+								name="initialHead"
+								render={({ field, fieldState: { error } }) => (
+									<Field>
+										<FieldLabel>Initial Head</FieldLabel>
+										<FieldContent>
+											<Input type="number" {...field} />
+											<FieldError errors={[error]} />
+										</FieldContent>
+									</Field>
+								)}
+							/>
+							<Controller
+								control={form.control}
+								name="maxCylinder"
+								render={({ field, fieldState: { error } }) => (
+									<Field>
+										<FieldLabel>Max Cylinder</FieldLabel>
+										<FieldContent>
+											<Input type="number" {...field} />
+											<FieldError errors={[error]} />
+										</FieldContent>
+									</Field>
+								)}
+							/>
+						</div>
+
+						<Controller
+							control={form.control}
+							name="direction"
+							render={({ field, fieldState: { error } }) => (
+								<Field>
+									<FieldLabel>Direction</FieldLabel>
+									<FieldContent>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<SelectTrigger>
+												<SelectValue placeholder="Select direction" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="LEFT">LEFT</SelectItem>
+												<SelectItem value="RIGHT">RIGHT</SelectItem>
+											</SelectContent>
+										</Select>
+										<FieldError errors={[error]} />
+									</FieldContent>
+								</Field>
+							)}
 						/>
-					</div>
-				</div>
 
-				<div className="space-y-2">
-					<Label>Direction</Label>
-					<Select
-						value={localDirection}
-						onValueChange={(value) =>
-							setLocalDirection(value as DiskDirection)
-						}>
-						<SelectTrigger>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent align="start" position="popper">
-							<SelectItem value="LEFT">LEFT</SelectItem>
-							<SelectItem value="RIGHT">RIGHT</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
+						<Controller
+							control={form.control}
+							name="queueInput"
+							render={({ field, fieldState: { error } }) => (
+								<Field>
+									<FieldLabel>Cylinder Queue</FieldLabel>
+									<FieldContent>
+										<Input placeholder="2069, 1212, 2296" {...field} />
+										<FieldError errors={[error]} />
+										<p className="text-xs text-muted-foreground">
+											Parsed requests: {queuePreview.length}
+										</p>
+									</FieldContent>
+								</Field>
+							)}
+						/>
+					</FieldGroup>
 
-				<div className="space-y-2">
-					<Label htmlFor="disk-queue">Cylinder Queue</Label>
-					<Input
-						id="disk-queue"
-						value={localQueue}
-						onChange={(event) => setLocalQueue(event.target.value)}
-						placeholder="2069, 1212, 2296"
-					/>
-					<p className="text-xs text-muted-foreground">
-						Parsed requests: {queuePreview.length}
-					</p>
-				</div>
-
-				<Button
-					className="w-full"
-					onClick={() => {
-						const parsedQueue = parseQueue(
-							localQueue,
-							Number.POSITIVE_INFINITY,
-						);
-						const inferredQueueMax =
-							parsedQueue.length > 0 ? Math.max(...parsedQueue) : maxCylinder;
-						const rawMax = Number(localMaxCylinder);
-						const max = Math.max(
-							1,
-							Math.trunc(
-								Number.isFinite(rawMax) && rawMax > 0
-									? rawMax
-									: inferredQueueMax,
-							),
-						);
-						const head = Math.min(
-							max,
-							Math.max(0, Math.trunc(Number(localHead) || initialHead)),
-						);
-						onSubmit({
-							algorithm: localAlgorithm,
-							initialHead: head,
-							direction: localDirection,
-							maxCylinder: max,
-							queue: parseQueue(localQueue, max),
-							includeEdges,
-						});
-					}}>
-					Run Simulation
-				</Button>
+					<Button type="submit" className="w-full">
+						Run Simulation
+					</Button>
+				</form>
 			</CardContent>
 		</Card>
 	);
