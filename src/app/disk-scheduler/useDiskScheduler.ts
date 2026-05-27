@@ -27,10 +27,12 @@ export interface DiskSchedulerState {
   comparisonResults: DiskSimulationResult[];
   comparisonMetrics: DiskComparisonMetrics[];
   currentStep: number;
+  animationProgress: number;
   isPlaying: boolean;
   playbackSpeed: number;
   ghostPreviewEnabled: boolean;
   academicModeEnabled: boolean;
+  scannerModeEnabled: boolean;
 }
 
 export interface DiskSchedulerActions {
@@ -46,6 +48,7 @@ export interface DiskSchedulerActions {
   setPlaybackSpeed: (speed: number) => void;
   toggleGhostPreview: () => void;
   toggleAcademicMode: () => void;
+  toggleScannerMode: () => void;
 }
 
 export const DISK_SCHEDULER_DEFAULT_INPUT: DiskSchedulerInput = {
@@ -137,19 +140,23 @@ export function useDiskScheduler(
     )
   );
   const [currentStep, setCurrentStep] = useState(0);
+  const [animationProgress, setAnimationProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeedState] = useState(DEFAULT_PLAYBACK_SPEED);
   const [ghostPreviewEnabled, setGhostPreviewEnabled] = useState(true);
   const [academicModeEnabled, setAcademicModeEnabled] = useState(false);
+  const [scannerModeEnabled, setScannerModeEnabled] = useState(true);
 
   const frameRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
+  const progressStartTimeRef = useRef<number | null>(null);
 
   const runSimulation = useCallback((nextInput?: DiskSchedulerInput) => {
     const source = nextInput ?? input;
     const nextResult = executeAlgorithm(source.algorithm, source);
     setResult(nextResult);
     setCurrentStep(0);
+    setAnimationProgress(0);
     setIsPlaying(false);
   }, [input]);
 
@@ -175,20 +182,30 @@ export function useDiskScheduler(
 
   const reset = useCallback(() => {
     setCurrentStep(0);
+    setAnimationProgress(0);
     setIsPlaying(false);
   }, []);
 
   const nextStep = useCallback(() => {
-    setCurrentStep((prev) => clampStep(prev + 1, result));
+    setCurrentStep((prev) => {
+      const next = clampStep(prev + 1, result);
+      setAnimationProgress(0);
+      return next;
+    });
   }, [result]);
 
   const previousStep = useCallback(() => {
-    setCurrentStep((prev) => clampStep(prev - 1, result));
+    setCurrentStep((prev) => {
+      const next = clampStep(prev - 1, result);
+      setAnimationProgress(0);
+      return next;
+    });
   }, [result]);
 
   const seekToStep = useCallback(
     (step: number) => {
       setCurrentStep(clampStep(step, result));
+      setAnimationProgress(0);
     },
     [result]
   );
@@ -206,6 +223,10 @@ export function useDiskScheduler(
     setAcademicModeEnabled((prev) => !prev);
   }, []);
 
+  const toggleScannerMode = useCallback(() => {
+    setScannerModeEnabled((prev) => !prev);
+  }, []);
+
   useEffect(() => {
     if (!isPlaying || !result || result.steps.length === 0) {
       if (frameRef.current !== null) {
@@ -213,6 +234,7 @@ export function useDiskScheduler(
         frameRef.current = null;
       }
       lastTickRef.current = null;
+      progressStartTimeRef.current = null;
       return;
     }
 
@@ -222,18 +244,43 @@ export function useDiskScheduler(
       if (lastTickRef.current === null) {
         lastTickRef.current = time;
       }
+      
+      if (progressStartTimeRef.current === null) {
+        progressStartTimeRef.current = time;
+      }
 
-      if (time - lastTickRef.current >= msPerStep) {
-        setCurrentStep((prev) => {
-          const next = prev + 1;
-          const max = Math.max(result.steps.length, 0);
-          if (next > max) {
-            setIsPlaying(false);
-            return max;
-          }
-          return next;
-        });
-        lastTickRef.current = time;
+      if (scannerModeEnabled) {
+        const elapsed = time - progressStartTimeRef.current;
+        const progress = Math.min(1, elapsed / msPerStep);
+        setAnimationProgress(progress);
+
+        if (elapsed >= msPerStep) {
+          setCurrentStep((prev) => {
+            const next = prev + 1;
+            const max = Math.max(result.steps.length, 0);
+            if (next > max) {
+              setIsPlaying(false);
+              setAnimationProgress(1);
+              return max;
+            }
+            setAnimationProgress(0);
+            progressStartTimeRef.current = time;
+            return next;
+          });
+        }
+      } else {
+        if (time - lastTickRef.current >= msPerStep) {
+          setCurrentStep((prev) => {
+            const next = prev + 1;
+            const max = Math.max(result.steps.length, 0);
+            if (next > max) {
+              setIsPlaying(false);
+              return max;
+            }
+            return next;
+          });
+          lastTickRef.current = time;
+        }
       }
 
       frameRef.current = requestAnimationFrame(tick);
@@ -247,8 +294,9 @@ export function useDiskScheduler(
       }
       frameRef.current = null;
       lastTickRef.current = null;
+      progressStartTimeRef.current = null;
     };
-  }, [isPlaying, playbackSpeed, result]);
+  }, [isPlaying, playbackSpeed, result, scannerModeEnabled]);
 
   const comparisonMetrics = useMemo(
     () => comparisonResults.map(calculateComparisonMetrics),
@@ -261,10 +309,12 @@ export function useDiskScheduler(
     comparisonResults,
     comparisonMetrics,
     currentStep,
+    animationProgress,
     isPlaying,
     playbackSpeed,
     ghostPreviewEnabled,
     academicModeEnabled,
+    scannerModeEnabled,
     setInput,
     runSimulation,
     runComparison,
@@ -277,5 +327,6 @@ export function useDiskScheduler(
     setPlaybackSpeed,
     toggleGhostPreview,
     toggleAcademicMode,
+    toggleScannerMode,
   };
 }

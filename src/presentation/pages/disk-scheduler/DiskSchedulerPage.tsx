@@ -33,10 +33,12 @@ export function DiskSchedulerPage() {
 		result,
 		comparisonMetrics,
 		currentStep,
+		animationProgress,
 		isPlaying,
 		playbackSpeed,
 		ghostPreviewEnabled,
 		academicModeEnabled,
+		scannerModeEnabled,
 		setInput,
 		runSimulation,
 		runComparison,
@@ -49,6 +51,7 @@ export function DiskSchedulerPage() {
 		setPlaybackSpeed,
 		toggleGhostPreview,
 		toggleAcademicMode,
+		toggleScannerMode,
 	} = useDiskScheduler({
 		algorithm: urlConfig.algo,
 		initialHead: urlConfig.head,
@@ -111,6 +114,7 @@ export function DiskSchedulerPage() {
 							algorithm={input.algorithm}
 							ghostEnabled={ghostPreviewEnabled}
 							academicEnabled={academicModeEnabled}
+							scannerEnabled={scannerModeEnabled}
 							includeEdges={input.includeEdges ?? true}
 							showGrid={showGrid}
 							showHead={showHead}
@@ -123,6 +127,7 @@ export function DiskSchedulerPage() {
 							showSequenceTicks={showSequenceTicks}
 							onGhostChange={toggleGhostPreview}
 							onAcademicChange={toggleAcademicMode}
+							onScannerChange={toggleScannerMode}
 							onIncludeEdgesChange={(value) => {
 								const nextInput = { ...input, includeEdges: value };
 								setInput(nextInput);
@@ -157,6 +162,8 @@ export function DiskSchedulerPage() {
 									ref={diskCanvasRef}
 									result={result}
 									currentStep={currentStep}
+									animationProgress={animationProgress}
+									scannerModeEnabled={scannerModeEnabled}
 									ghostEnabled={ghostPreviewEnabled}
 									showGrid={showGrid}
 									showHead={showHead}

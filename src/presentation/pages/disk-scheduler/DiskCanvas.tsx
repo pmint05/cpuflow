@@ -29,6 +29,8 @@ import { CanvasToolbar } from "./CanvasToolbar";
 interface DiskCanvasProps {
 	result: DiskSimulationResult | null;
 	currentStep: number;
+	animationProgress: number;
+	scannerModeEnabled: boolean;
 	ghostEnabled: boolean;
 	showGrid: boolean;
 	showHead: boolean;
@@ -83,6 +85,8 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 		{
 			result,
 			currentStep,
+			animationProgress,
+			scannerModeEnabled,
 			ghostEnabled,
 			showGrid,
 			showHead,
@@ -142,7 +146,16 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 			currentStep,
 			Math.max(data.length - 1, 0),
 		);
-		const currentHead = data[currentPointIndex] ?? result?.initialHead ?? 0;
+		
+		const currentHead = useMemo(() => {
+			if (!result) return 0;
+			const current = data[currentPointIndex] ?? result.initialHead;
+			if (!scannerModeEnabled || currentStep >= data.length - 1) return current;
+			
+			const next = data[currentStep + 1] ?? current;
+			return current + (next - current) * animationProgress;
+		}, [data, currentPointIndex, scannerModeEnabled, animationProgress, currentStep, result]);
+
 		const pathColor = result
 			? getDiskAlgorithmColor(result.algorithm)
 			: "#3b82f6";
@@ -250,16 +263,35 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 			});
 		}, [result, maxCylinder, stageWidth, markerRadius, verticalSpacing]);
 
-		const completedSegments = segments.slice(0, Math.max(0, currentStep - 1));
+		const completedSegments = segments.slice(0, Math.max(0, currentStep));
 		const activeSegmentIndex =
-			currentStep > 0 && currentStep <= segments.length
-				? currentStep - 1
+			currentStep < segments.length
+				? currentStep
 				: null;
 		const activeSegment =
 			activeSegmentIndex === null
 				? null
 				: (segments[activeSegmentIndex] ?? null);
-		const futureSegments = segments.slice(currentStep);
+		const futureSegments = segments.slice(currentStep + 1);
+
+		const interpolatedActivePoints = useMemo(() => {
+			if (!activeSegment || !scannerModeEnabled) return activeSegment?.points ?? [];
+			
+			const [x1, y1, x2, y2] = activeSegment.points;
+			const currentX = x1 + (x2 - x1) * animationProgress;
+			const currentY = y1 + (y2 - y1) * animationProgress;
+			
+			return [x1, y1, currentX, currentY];
+		}, [activeSegment, scannerModeEnabled, animationProgress]);
+
+		const scannerHeadX = useMemo(() => {
+			return cylinderToX({
+				cylinder: currentHead,
+				maxCylinder,
+				width: stageWidth,
+				paddingX: HORIZONTAL_PADDING,
+			});
+		}, [currentHead, maxCylinder, stageWidth]);
 
 		const gridLines = useMemo(() => {
 			// Base ticks
@@ -505,7 +537,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 								<Layer listening={false}>
 									{activeSegment.type === "JUMP" ? (
 										<Line
-											points={activeSegment.points}
+											points={interpolatedActivePoints}
 											stroke={pathColor}
 											strokeWidth={strokeWidth}
 											lineCap="round"
@@ -515,7 +547,7 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 										/>
 									) : (
 										<Arrow
-											points={activeSegment.points}
+											points={interpolatedActivePoints}
 											stroke={pathColor}
 											fill={pathColor}
 											strokeWidth={strokeWidth}
@@ -529,62 +561,89 @@ export const DiskCanvas = forwardRef<DiskCanvasHandle, DiskCanvasProps>(
 								</Layer>
 							)}
 
+							{layers.includes("background-grid") && scannerModeEnabled && (
+								<Layer listening={false}>
+									<Line
+										points={[
+											scannerHeadX,
+											AXIS_PADDING_Y / 2,
+											scannerHeadX,
+											stageHeight - BOTTOM_AXIS_HEIGHT - 10,
+										]}
+										stroke={pathColor}
+										strokeWidth={2}
+										dash={[4, 4]}
+										opacity={0.6}
+									/>
+									<Circle
+										x={scannerHeadX}
+										y={AXIS_PADDING_Y / 2}
+										radius={4}
+										fill={pathColor}
+									/>
+									<Circle
+										x={scannerHeadX}
+										y={stageHeight - BOTTOM_AXIS_HEIGHT - 10}
+										radius={4}
+										fill={pathColor}
+									/>
+								</Layer>
+							)}
+
 							{layers.includes("marker") && (
 								<Layer>
-									{markers.map((marker, index) => (
-										<Group key={`marker-${index}`}>
-											<Circle
-												x={marker.x}
-												y={marker.y}
-												radius={showMarkerLabels ? markerRadius : markerRadius / 3}
-												fill={
-													(index === currentPointIndex && highlightCurrent) || !showMarkerLabels
-														? pathColor
-														: "#ffffff"
-												}
-												stroke={pathColor}
-												strokeWidth={2}
-												onMouseEnter={() => setHoveredMarker(marker)}
-												onMouseMove={() => setHoveredMarker(marker)}
-												onMouseLeave={() => setHoveredMarker(null)}
-											/>
-											{showMarkerLabels && (
-												<Text
-													x={marker.x - markerRadius}
-													y={marker.y - markerLabelSize / 2 + 1}
-													width={markerRadius * 2}
-													align="center"
-													text={marker.label}
-													fontSize={markerLabelSize}
-													fontStyle="bold"
+									{markers.map((marker, index) => {
+										const isPassed = index <= currentStep;
+										const isCurrentlyScanning = scannerModeEnabled && index === currentStep + 1;
+										const opacity = isPassed ? 1 : 0.3;
+
+										return (
+											<Group key={`marker-${index}`} opacity={opacity}>
+												<Circle
+													x={marker.x}
+													y={marker.y}
+													radius={showMarkerLabels ? markerRadius : markerRadius / 3}
 													fill={
-														index === currentPointIndex && highlightCurrent
-															? "#ffffff"
-															: pathColor
+														(index === currentPointIndex && highlightCurrent) || !showMarkerLabels
+															? pathColor
+															: "#ffffff"
 													}
-													listening={false}
+													stroke={pathColor}
+													strokeWidth={2}
+													onMouseEnter={() => setHoveredMarker(marker)}
+													onMouseMove={() => setHoveredMarker(marker)}
+													onMouseLeave={() => setHoveredMarker(null)}
 												/>
-											)}
-										</Group>
-									))}
+												{showMarkerLabels && (
+													<Text
+														x={marker.x - markerRadius}
+														y={marker.y - markerLabelSize / 2 + 1}
+														width={markerRadius * 2}
+														align="center"
+														text={marker.label}
+														fontSize={markerLabelSize}
+														fontStyle="bold"
+														fill={
+															index === currentPointIndex && highlightCurrent
+																? "#ffffff"
+																: pathColor
+														}
+														listening={false}
+													/>
+												)}
+											</Group>
+										);
+									})}
 								</Layer>
 							)}
 
 							{layers.includes("active-head") && result && showHead && (
 								<Layer listening={false}>
 									<Group
-										x={
-											cylinderToX({
-												cylinder: currentHead,
-												maxCylinder,
-												width: stageWidth,
-												paddingX: HORIZONTAL_PADDING,
-											}) +
-											markerRadius +
-											10
-										}
+										x={scannerHeadX + markerRadius + 10}
 										y={
-											AXIS_PADDING_Y + currentPointIndex * verticalSpacing - 12
+											AXIS_PADDING_Y + 
+											Math.min(currentStep + (currentStep < data.length - 1 ? animationProgress : 0), Math.max(0, data.length - 1)) * verticalSpacing - 12
 										}>
 										<Rect
 											width={46}

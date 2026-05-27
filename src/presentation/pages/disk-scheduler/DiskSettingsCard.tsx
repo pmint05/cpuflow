@@ -8,6 +8,7 @@ interface DiskSettingsCardProps {
   algorithm: DiskSchedulingAlgorithm;
   ghostEnabled: boolean;
   academicEnabled: boolean;
+  scannerEnabled: boolean;
   includeEdges: boolean;
   showGrid: boolean;
   showHead: boolean;
@@ -20,6 +21,7 @@ interface DiskSettingsCardProps {
   showSequenceTicks: boolean;
   onGhostChange: (value: boolean) => void;
   onAcademicChange: (value: boolean) => void;
+  onScannerChange: (value: boolean) => void;
   onIncludeEdgesChange: (value: boolean) => void;
   onShowGridChange: (value: boolean) => void;
   onShowHeadChange: (value: boolean) => void;
@@ -36,6 +38,7 @@ export function DiskSettingsCard({
   algorithm,
   ghostEnabled,
   academicEnabled,
+  scannerEnabled,
   includeEdges,
   showGrid,
   showHead,
@@ -48,6 +51,7 @@ export function DiskSettingsCard({
   showSequenceTicks,
   onGhostChange,
   onAcademicChange,
+  onScannerChange,
   onIncludeEdgesChange,
   onShowGridChange,
   onShowHeadChange,
@@ -68,6 +72,11 @@ export function DiskSettingsCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-sm font-medium">Scanner Head Mode</Label>
+            <Switch checked={scannerEnabled} onCheckedChange={onScannerChange} />
+          </div>
+
           <div className="flex items-center justify-between gap-4">
             <Label className="text-sm font-medium">Ghost Preview Path</Label>
             <Switch checked={ghostEnabled} onCheckedChange={onGhostChange} />
