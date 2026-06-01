@@ -7,6 +7,7 @@ import { Button } from '@components/ui/button';
 const NAV_ITEMS = [
   { label: 'CPU Scheduler', path: '/cpu-scheduler' },
   { label: 'Disk Scheduler', path: '/disk-scheduler' },
+  { label: 'Page Replacement', path: '/page-replacement' },
   { label: "Banker's Algorithm", path: '/algo/banker' },
   { label: 'Deadlock Detection', path: '/algo/deadlock-detection' },
 ] as const;

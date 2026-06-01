@@ -21,7 +21,7 @@ export function DiskTimeline({
 	currentStep,
 	onSeek,
 }: DiskTimelineProps) {
-	const [isOpen, setIsOpen] = useState(true);
+	const [isOpen, setIsOpen] = useState(false);
 
 	const displaySteps = result
 		? [
@@ -53,14 +53,13 @@ export function DiskTimeline({
 							<CardTitle className="text-lg font-bold">
 								Simulation Timeline
 							</CardTitle>
-							<Button
-								variant="ghost"
-								size="icon-sm"
-								className={cn(
-									"transition-transform duration-300",
-									isOpen && "rotate-180",
-								)}>
-								<ChevronDown className="size-4" />
+							<Button variant="ghost" size="icon-sm">
+								<ChevronDown
+									className={cn(
+										"size-4 transition-transform duration-300 -rotate-90",
+										isOpen && "rotate-0",
+									)}
+								/>
 							</Button>
 						</div>
 					</CardHeader>

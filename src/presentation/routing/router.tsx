@@ -6,6 +6,7 @@ import { BankersPage } from '@presentation/pages/bankers-algorithm/BankersPage';
 import { DeadlockPage } from '@presentation/pages/deadlock-detection/DeadlockPage';
 import { NotFoundPage } from '@presentation/pages/NotFoundPage';
 import { DiskSchedulerPage } from '@presentation/pages/disk-scheduler/DiskSchedulerPage';
+import { PageReplacementPage } from '@presentation/pages/page-replacement/PageReplacementPage';
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: '/disk-scheduler',
         element: <DiskSchedulerPage />,
+      },
+      {
+        path: '/page-replacement',
+        element: <PageReplacementPage />,
       },
       {
         path: '*',

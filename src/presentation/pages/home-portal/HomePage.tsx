@@ -4,6 +4,7 @@ import {
 	ShieldCheckIcon,
 	AlertTriangleIcon,
 	HardDriveIcon,
+	Layers3Icon,
 	ArrowRightIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
@@ -42,6 +43,22 @@ const SIMULATORS = [
 		color: "from-sky-500/10 to-indigo-500/10",
 		iconColor: "text-sky-500",
 		onHover: "hover:ring-sky-200 dark:hover:ring-sky-800",
+	},
+	{
+		title: "Page Replacement",
+		description:
+			"Analyze FIFO, LRU, OPT, LFU, and Second Chance page replacement behavior across multiple frame counts with a slide-like timeline.",
+		icon: Layers3Icon,
+		path: "/page-replacement",
+		features: [
+			"5 replacement algorithms",
+			"Batch frame comparison",
+			"Hit and fault timeline",
+			"Overflow-safe table view",
+		],
+		color: "from-violet-500/10 to-fuchsia-500/10",
+		iconColor: "text-violet-500",
+		onHover: "hover:ring-violet-200 dark:hover:ring-violet-800",
 	},
 	{
 		title: "Banker's Algorithm",

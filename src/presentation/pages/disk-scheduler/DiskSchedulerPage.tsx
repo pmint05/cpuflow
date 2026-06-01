@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { PageBreadcrumb } from "@presentation/components/shared/PageBreadcrumb";
 import { useDiskScheduler, type DiskSchedulerInput, DISK_SCHEDULER_DEFAULT_INPUT } from "@app/disk-scheduler/useDiskScheduler";
 import { useDiskUrlState } from "@presentation/hooks/useDiskUrlState";
@@ -13,7 +14,7 @@ import { Button } from "@components/ui/button";
 import { DiskSettingsCard } from "./DiskSettingsCard";
 import { Card, CardContent } from "@presentation/components/ui/card";
 import { Badge } from "@presentation/components/ui/badge";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, Copy } from "lucide-react";
 import {
 	parseQueue,
 } from "@infra/serializers/disk-scheduler-config-serializer";
@@ -217,12 +218,27 @@ export function DiskSchedulerPage() {
 								/>
 								
 								{result && (
-									<Card className="border-primary/10 shadow-none">
-										<CardContent className="px-4">
+									<Card className="border-primary/10 shadow-none py-0">
+										<CardContent className="px-4 py-3">
 											<div className="flex flex-col gap-3">
-												<span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">
-													Full Traversal Path
-												</span>
+												<div className="flex items-center justify-between">
+													<span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">
+														Full Traversal Path
+													</span>
+													<Button
+														variant="ghost"
+														size="icon"
+														className="h-6 w-6 text-muted-foreground hover:bg-accent hover:text-foreground"
+														onClick={() => {
+															const path = result.seekSequence.slice(1).join(", ");
+															navigator.clipboard.writeText(path);
+															toast.success("Path copied to clipboard!");
+														}}
+														title="Copy path (excluding initial head)"
+													>
+														<Copy className="size-3" />
+													</Button>
+												</div>
 												<div className="flex flex-wrap items-center gap-2">
 													{result.seekSequence.map((cylinder, index) => (
 														<div key={`${cylinder}-${index}`} className="flex items-center gap-2">
