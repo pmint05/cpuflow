@@ -247,14 +247,32 @@ export function PageReplacementPage() {
 														</Table>
 													</div>
 
-													<div className="flex flex-wrap gap-2">
-														{run.result.faultSequence.length === 0 ? (
-															<Badge variant="outline">No faults</Badge>
-														) : (
-															run.result.faultSequence.map((page, index) => (
-																<Badge key={`${run.runId}-${page}-${index}`} variant="destructive">{page}</Badge>
-															))
-														)}
+													<div className="space-y-4">
+														<div className="space-y-2">
+															<div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fault Sequence</div>
+															<div className="flex flex-wrap gap-2">
+																{run.result.faultSequence.length === 0 ? (
+																	<Badge variant="outline">No faults</Badge>
+																) : (
+																	run.result.faultSequence.map((page, index) => (
+																		<Badge key={`${run.runId}-fault-${page}-${index}`} variant="destructive">{page}</Badge>
+																	))
+																)}
+															</div>
+														</div>
+
+														<div className="space-y-2">
+															<div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Victim Sequence (Replaced Pages)</div>
+															<div className="flex flex-wrap gap-2">
+																{run.result.victimSequence.length === 0 ? (
+																	<Badge variant="outline">No replacements</Badge>
+																) : (
+																	run.result.victimSequence.map((page, index) => (
+																		<Badge key={`${run.runId}-victim-${page}-${index}`} variant="outline" className="border-rose-500/50 text-rose-600 dark:text-rose-400">{page}</Badge>
+																	))
+																)}
+															</div>
+														</div>
 													</div>
 												</CardContent>
 											</Card>

@@ -28,7 +28,7 @@ export function calculateFIFO(referenceString: string[], frameCount: number): Pa
 
 		const emptyFrameIndex = findEmptyFrameIndex(frames);
 		let changedFrameIndex = emptyFrameIndex;
-		let replacedPage: number | null = null;
+		let replacedPage = null;
 
 		if (emptyFrameIndex !== -1) {
 			frames[emptyFrameIndex] = referencedPage;

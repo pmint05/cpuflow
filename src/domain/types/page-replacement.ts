@@ -30,6 +30,7 @@ export interface PageReplacementMetrics {
 	hitRate: number;
 	faultRate: number;
 	faultSequence: string[];
+	victimSequence: string[];
 }
 
 export interface PageReplacementResult extends PageReplacementInput, PageReplacementMetrics {

@@ -15,6 +15,7 @@ describe('page replacement algorithms', () => {
 		expect(result.pageFaults).toBe(4);
 		expect(result.hits).toBe(2);
 		expect(result.faultSequence).toEqual(['1', '2', '3', '4']);
+		expect(result.victimSequence).toEqual(['1']);
 		expect(result.steps).toHaveLength(6);
 		expect(result.steps[0]?.framesAfter).toEqual(['1', null, null]);
 		expect(result.steps[4]?.framesAfter).toEqual(['4', '2', '3']);
@@ -26,6 +27,7 @@ describe('page replacement algorithms', () => {
 		expect(result.pageFaults).toBe(5);
 		expect(result.hits).toBe(1);
 		expect(result.faultSequence).toEqual(['1', '2', '3', '4', '2']);
+		expect(result.victimSequence).toEqual(['2', '3']);
 		expect(result.steps[4]?.framesAfter).toEqual(['1', '4', '3']);
 		expect(result.steps[5]?.fault).toBe(true);
 	});
@@ -36,6 +38,7 @@ describe('page replacement algorithms', () => {
 		expect(result.pageFaults).toBe(4);
 		expect(result.hits).toBe(2);
 		expect(result.faultSequence).toEqual(['1', '2', '3', '4']);
+		expect(result.victimSequence).toEqual(['1']);
 		expect(result.steps[4]?.framesAfter).toEqual(['4', '2', '3']);
 		expect(result.steps[5]?.hit).toBe(true);
 	});
@@ -46,6 +49,7 @@ describe('page replacement algorithms', () => {
 		expect(result.pageFaults).toBe(5);
 		expect(result.hits).toBe(1);
 		expect(result.faultSequence).toEqual(['1', '2', '3', '4', '2']);
+		expect(result.victimSequence).toEqual(['2', '3']);
 		expect(result.steps[4]?.framesAfter).toEqual(['1', '4', '3']);
 	});
 
@@ -55,6 +59,7 @@ describe('page replacement algorithms', () => {
 		expect(result.pageFaults).toBe(4);
 		expect(result.hits).toBe(2);
 		expect(result.faultSequence).toEqual(['1', '2', '3', '4']);
+		expect(result.victimSequence).toEqual(['1']);
 		expect(result.steps[0]?.framesBefore).toEqual([null, null, null]);
 		expect(result.steps[4]?.framesAfter).toEqual(['4', '2', '3']);
 	});

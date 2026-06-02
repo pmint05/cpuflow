@@ -37,6 +37,9 @@ export function buildResult(params: {
 	const faultSequence = params.steps
 		.filter((step) => step.fault)
 		.map((step) => step.referencedPage);
+	const victimSequence = params.steps
+		.filter((step) => step.fault && step.replacedPage !== null)
+		.map((step) => step.replacedPage as string);
 
 	const metrics: PageReplacementMetrics = {
 		totalReferences: params.input.referenceString.length,
@@ -49,6 +52,7 @@ export function buildResult(params: {
 			? Number(((pageFaults / params.input.referenceString.length) * 100).toFixed(2))
 			: 0,
 		faultSequence,
+		victimSequence,
 	};
 
 	return {
@@ -74,6 +78,7 @@ export function createNotApplicableResult(
 		hitRate: 0,
 		faultRate: 0,
 		faultSequence: [],
+		victimSequence: [],
 		steps: input.referenceString.map((referencedPage, stepIndex) => ({
 			stepIndex,
 			referencedPage,
